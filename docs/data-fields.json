@@ -1,0 +1,1007 @@
+{
+  "generatedFrom": "public/legacy/index.html",
+  "privacy": "仅包含公开静态资料字段；不包含站长 token、SQLite、日志、作者联系方式或后台数据。",
+  "datasets": [
+    {
+      "dataset": "ships",
+      "count": 328,
+      "fields": [
+        {
+          "name": "中文名",
+          "sample": "巨兽 先锋型"
+        },
+        {
+          "name": "英文名",
+          "sample": "Behemoth Vanguard"
+        },
+        {
+          "name": "种族",
+          "sample": "Argon"
+        },
+        {
+          "name": "势力",
+          "sample": "Argon、公爵海盗、哈提克瓦自由联盟、鳞甲协定"
+        },
+        {
+          "name": "尺寸",
+          "sample": "L"
+        },
+        {
+          "name": "船级/类型",
+          "sample": "驱逐舰"
+        },
+        {
+          "name": "主要用途",
+          "sample": "战斗"
+        },
+        {
+          "name": "船体耐久",
+          "sample": 93000
+        },
+        {
+          "name": "货舱容量",
+          "sample": 2300
+        },
+        {
+          "name": "货物类型",
+          "sample": "集装箱"
+        },
+        {
+          "name": "主武器槽",
+          "sample": 2
+        },
+        {
+          "name": "S 武器槽",
+          "sample": 0
+        },
+        {
+          "name": "M 武器槽",
+          "sample": 0
+        },
+        {
+          "name": "L 武器槽",
+          "sample": 2
+        },
+        {
+          "name": "炮塔槽",
+          "sample": 10
+        },
+        {
+          "name": "S 炮塔槽",
+          "sample": 0
+        },
+        {
+          "name": "M 炮塔槽",
+          "sample": 8
+        },
+        {
+          "name": "L 炮塔槽",
+          "sample": 2
+        },
+        {
+          "name": "护盾槽",
+          "sample": 12
+        },
+        {
+          "name": "S 护盾槽",
+          "sample": 0
+        },
+        {
+          "name": "M 护盾槽",
+          "sample": 9
+        },
+        {
+          "name": "L 护盾槽",
+          "sample": 3
+        },
+        {
+          "name": "XL 护盾槽",
+          "sample": 0
+        },
+        {
+          "name": "引擎槽",
+          "sample": 3
+        },
+        {
+          "name": "XS 停靠/机库",
+          "sample": 10
+        },
+        {
+          "name": "S 停靠/机库",
+          "sample": 8
+        },
+        {
+          "name": "M 停靠/机库",
+          "sample": 0
+        },
+        {
+          "name": "L 停靠/机库",
+          "sample": 0
+        },
+        {
+          "name": "XL 停靠/机库",
+          "sample": 0
+        },
+        {
+          "name": "太空服停靠",
+          "sample": 1
+        },
+        {
+          "name": "停靠摘要",
+          "sample": "XS 10、S 8、太空服 1"
+        },
+        {
+          "name": "平均价格（Cr）",
+          "sample": 4713125
+        },
+        {
+          "name": "船只 macro",
+          "sample": "ship_arg_l_destroyer_01_a_macro"
+        },
+        {
+          "name": "ware ID",
+          "sample": "ship_arg_l_destroyer_01_a"
+        },
+        {
+          "name": "数据状态",
+          "sample": "已确认"
+        },
+        {
+          "name": "名称状态",
+          "sample": "中文已解析"
+        },
+        {
+          "name": "原始 text 引用",
+          "sample": "{20101,11002}"
+        },
+        {
+          "name": "component 引用",
+          "sample": "ship_arg_l_destroyer_01"
+        },
+        {
+          "name": "制造种族",
+          "sample": "阿贡"
+        },
+        {
+          "name": "制造种族原始值",
+          "sample": "argon"
+        },
+        {
+          "name": "类型",
+          "sample": "L 船只"
+        },
+        {
+          "name": "原始类型",
+          "sample": "ship_l"
+        },
+        {
+          "name": "船级/类型原始值",
+          "sample": "destroyer"
+        },
+        {
+          "name": "主用途",
+          "sample": "战斗"
+        },
+        {
+          "name": "主用途原始值",
+          "sample": "fight"
+        },
+        {
+          "name": "势力原始值",
+          "sample": "argon; buccaneers; hatikvah; scaleplate"
+        },
+        {
+          "name": "货物类型原始值",
+          "sample": "container"
+        },
+        {
+          "name": "质量",
+          "sample": 196.016
+        },
+        {
+          "name": "船员容量",
+          "sample": 44
+        },
+        {
+          "name": "导弹容量",
+          "sample": 160
+        },
+        {
+          "name": "无人机/单位容量",
+          "sample": 10
+        },
+        {
+          "name": "停靠区数量",
+          "sample": 1
+        },
+        {
+          "name": "XS 停靠数量",
+          "sample": 1
+        },
+        {
+          "name": "机库存储数量",
+          "sample": 2
+        },
+        {
+          "name": "前向阻力",
+          "sample": 99.004
+        },
+        {
+          "name": "反向阻力",
+          "sample": 396.016
+        },
+        {
+          "name": "俯仰阻力",
+          "sample": 106.203
+        },
+        {
+          "name": "偏航阻力",
+          "sample": 106.203
+        },
+        {
+          "name": "俯仰惯性",
+          "sample": 96.271
+        },
+        {
+          "name": "偏航惯性",
+          "sample": 96.271
+        },
+        {
+          "name": "滚转惯性",
+          "sample": 77.016
+        },
+        {
+          "name": "完整 ware 标签",
+          "sample": "ship"
+        },
+        {
+          "name": "来源文件",
+          "sample": "assets/units/size_l/macros/ship_arg_l_destroyer_01_a_macro.xml"
+        },
+        {
+          "name": "component 来源文件",
+          "sample": "assets/units/size_l/ship_arg_l_destroyer_01.xml"
+        },
+        {
+          "name": "运输类型",
+          "sample": "ship"
+        },
+        {
+          "name": "体积",
+          "sample": 1
+        },
+        {
+          "name": "最低价格（Cr）",
+          "sample": 4006156
+        },
+        {
+          "name": "最高价格（Cr）",
+          "sample": 5420094
+        },
+        {
+          "name": "生产方式",
+          "sample": "default:182s x1"
+        },
+        {
+          "name": "生产资源",
+          "sample": "能量电池 ×1008；船体部件 ×4433"
+        },
+        {
+          "name": "拥有势力",
+          "sample": "阿贡、公爵海盗、哈提克瓦自由联盟、鳞甲协定"
+        },
+        {
+          "name": "许可证",
+          "sample": "capitalship"
+        },
+        {
+          "name": "标签摘要",
+          "sample": "船只"
+        },
+        {
+          "name": "建造材料",
+          "sample": "能量电池 ×1008；船体部件 ×4433"
+        },
+        {
+          "name": "完整角色标签",
+          "sample": "military, destroyer, mission; military, plunderer, mission; military, destroyer, mission, phase2"
+        },
+        {
+          "name": "ship library ID",
+          "sample": "argon_destroyer_l; antigone_destroyer_l; hat_plunderer; sca_plunderer; buc_destroyer_l"
+        },
+        {
+          "name": "ware 分组",
+          "sample": "无人机"
+        },
+        {
+          "name": "生产资源原文",
+          "sample": "default=energycells x1008; default=hullparts x4433"
+        }
+      ]
+    },
+    {
+      "dataset": "weapons",
+      "count": 137,
+      "fields": [
+        {
+          "name": "中文名",
+          "sample": "炸弹发射器"
+        },
+        {
+          "name": "英文名",
+          "sample": "Bomb Launcher"
+        },
+        {
+          "name": "制造种族",
+          "sample": "通用"
+        },
+        {
+          "name": "尺寸",
+          "sample": "L"
+        },
+        {
+          "name": "Mk",
+          "sample": 1
+        },
+        {
+          "name": "武器类型",
+          "sample": "炸弹发射器"
+        },
+        {
+          "name": "单发伤害",
+          "sample": 3
+        },
+        {
+          "name": "理论 DPS（估算）",
+          "sample": 36.0
+        },
+        {
+          "name": "射速（发/秒）",
+          "sample": 12
+        },
+        {
+          "name": "射程（米）",
+          "sample": 200
+        },
+        {
+          "name": "弹体速度（米/秒）",
+          "sample": 800
+        },
+        {
+          "name": "弹体寿命（秒）",
+          "sample": -1
+        },
+        {
+          "name": "单发热量",
+          "sample": 384
+        },
+        {
+          "name": "过热阈值",
+          "sample": 10000
+        },
+        {
+          "name": "散热速度",
+          "sample": 1160
+        },
+        {
+          "name": "散热延迟（秒）",
+          "sample": 2.7
+        },
+        {
+          "name": "平均价格（Cr）",
+          "sample": 200000
+        },
+        {
+          "name": "武器 macro",
+          "sample": "spacesuit_gen_bomblauncher_01_macro"
+        },
+        {
+          "name": "ware ID",
+          "sample": "weapon_gen_spacesuit_demolition_01_mk1"
+        },
+        {
+          "name": "弹体 macro",
+          "sample": "bomb_player_limpet_mine_01_mk1_macro"
+        },
+        {
+          "name": "数据状态",
+          "sample": "已确认"
+        },
+        {
+          "name": "名称状态",
+          "sample": "中文已解析"
+        },
+        {
+          "name": "原始 text 引用",
+          "sample": "{20113,1031}"
+        },
+        {
+          "name": "类型",
+          "sample": "bomblauncher"
+        },
+        {
+          "name": "类型说明",
+          "sample": "炸弹发射器"
+        },
+        {
+          "name": "弹体来源文件",
+          "sample": "assets/fx/weaponFx/macros/bomb_player_limpet_mine_01_mk1_macro.xml"
+        },
+        {
+          "name": "弹体数量",
+          "sample": 1
+        },
+        {
+          "name": "炮管数量",
+          "sample": 1
+        },
+        {
+          "name": "弹药值",
+          "sample": 1
+        },
+        {
+          "name": "弹药装填（秒）",
+          "sample": 2
+        },
+        {
+          "name": "武器系统",
+          "sample": "bomb"
+        },
+        {
+          "name": "转向速度（度/秒）",
+          "sample": 100
+        },
+        {
+          "name": "完整 ware 标签",
+          "sample": "disallowdrop equipment inventory noblueprint noplayerblueprint personalupgrade weapon"
+        },
+        {
+          "name": "来源文件",
+          "sample": "assets/props/WeaponSystems/spacesuit/macros/spacesuit_gen_bomblauncher_01_macro.xml"
+        },
+        {
+          "name": "ware 分组",
+          "sample": "武器"
+        },
+        {
+          "name": "运输类型",
+          "sample": "个人物品"
+        },
+        {
+          "name": "体积",
+          "sample": 1
+        },
+        {
+          "name": "最低价格（Cr）",
+          "sample": 175000
+        },
+        {
+          "name": "最高价格（Cr）",
+          "sample": 225000
+        },
+        {
+          "name": "生产方式",
+          "sample": "default:10s x1"
+        },
+        {
+          "name": "许可证",
+          "sample": "generaluseequipment"
+        },
+        {
+          "name": "component 引用",
+          "sample": "spacesuit_gen_bomblauncher_01_macro"
+        },
+        {
+          "name": "标签摘要",
+          "sample": "disallowdrop、装备、个人物品、noblueprint、noplayerblueprint、personalupgrade、固定武器"
+        },
+        {
+          "name": "弹体/导弹 类型",
+          "sample": "炸弹"
+        },
+        {
+          "name": "弹体/导弹 寿命（秒）",
+          "sample": -1
+        },
+        {
+          "name": "弹体/导弹 数据状态",
+          "sample": "已确认"
+        },
+        {
+          "name": "弹体/导弹 名称状态",
+          "sample": "中文已解析"
+        },
+        {
+          "name": "弹体/导弹 原始 text 引用",
+          "sample": "{20201,12201}"
+        },
+        {
+          "name": "射程来源",
+          "sample": "XML 显式 range"
+        },
+        {
+          "name": "最大命中数",
+          "sample": 1
+        },
+        {
+          "name": "维修伤害",
+          "sample": 0
+        },
+        {
+          "name": "转向加速度（度/秒²）",
+          "sample": 200
+        },
+        {
+          "name": "弹体/导弹 速度（米/秒）",
+          "sample": 800
+        },
+        {
+          "name": "弹体/导弹 射程（米）",
+          "sample": 200
+        },
+        {
+          "name": "弹体/导弹 射程来源",
+          "sample": "XML 显式 range"
+        },
+        {
+          "name": "弹体/导弹 单发伤害",
+          "sample": 3
+        },
+        {
+          "name": "弹体/导弹 理论 DPS（估算）",
+          "sample": 36
+        },
+        {
+          "name": "弹体/导弹 射速（发/秒）",
+          "sample": 12
+        },
+        {
+          "name": "制造种族原始值",
+          "sample": "argon"
+        },
+        {
+          "name": "表面部件耐久",
+          "sample": 10000
+        },
+        {
+          "name": "生产资源",
+          "sample": "先进电子设备 ×317；能量电池 ×2875；武器部件 ×322"
+        },
+        {
+          "name": "拥有势力",
+          "sample": "联盟、安提戈涅共和国、阿贡、公爵海盗、哈提克瓦自由联盟、鳞甲协定"
+        },
+        {
+          "name": "建造材料",
+          "sample": "先进电子设备 ×317；能量电池 ×2875；武器部件 ×322"
+        },
+        {
+          "name": "弹体/导弹 单发热量",
+          "sample": 384
+        },
+        {
+          "name": "生产资源原文",
+          "sample": "default=advancedelectronics x317; default=energycells x2875; default=weaponcomponents x322"
+        }
+      ]
+    },
+    {
+      "dataset": "turrets",
+      "count": 96,
+      "fields": [
+        {
+          "name": "中文名",
+          "sample": "ARG L 光束炮塔 Mk1"
+        },
+        {
+          "name": "英文名",
+          "sample": "ARG L Beam Turret Mk1"
+        },
+        {
+          "name": "制造种族",
+          "sample": "Argon"
+        },
+        {
+          "name": "尺寸",
+          "sample": "L"
+        },
+        {
+          "name": "Mk",
+          "sample": 1
+        },
+        {
+          "name": "炮塔类型",
+          "sample": "炮塔"
+        },
+        {
+          "name": "单发伤害",
+          "sample": 375
+        },
+        {
+          "name": "理论 DPS（估算）",
+          "sample": 375.0
+        },
+        {
+          "name": "射程（米）",
+          "sample": 8600
+        },
+        {
+          "name": "弹体速度（米/秒）",
+          "sample": 299792500
+        },
+        {
+          "name": "弹体寿命（秒）",
+          "sample": 4
+        },
+        {
+          "name": "转向速度（度/秒）",
+          "sample": 40
+        },
+        {
+          "name": "平均价格（Cr）",
+          "sample": 64735
+        },
+        {
+          "name": "炮塔 macro",
+          "sample": "turret_arg_l_beam_01_mk1_macro"
+        },
+        {
+          "name": "ware ID",
+          "sample": "turret_arg_l_beam_01_mk1"
+        },
+        {
+          "name": "弹体/导弹 macro",
+          "sample": "bullet_arg_turret_l_beam_01_mk1_macro"
+        },
+        {
+          "name": "射程来源",
+          "sample": "XML 显式 range"
+        },
+        {
+          "name": "数据状态",
+          "sample": "已确认"
+        },
+        {
+          "name": "名称状态",
+          "sample": "中文已解析"
+        },
+        {
+          "name": "原始 text 引用",
+          "sample": "{20105,5084}"
+        },
+        {
+          "name": "类型",
+          "sample": "turret"
+        },
+        {
+          "name": "类型说明",
+          "sample": "炮塔"
+        },
+        {
+          "name": "炮塔类型说明",
+          "sample": "炮塔"
+        },
+        {
+          "name": "制造种族原始值",
+          "sample": "argon"
+        },
+        {
+          "name": "弹体来源文件",
+          "sample": "assets/fx/weaponFx/macros/bullet_arg_turret_l_beam_01_mk1_macro.xml"
+        },
+        {
+          "name": "弹体数量",
+          "sample": 1
+        },
+        {
+          "name": "炮管数量",
+          "sample": 1
+        },
+        {
+          "name": "最大命中数",
+          "sample": 1
+        },
+        {
+          "name": "维修伤害",
+          "sample": 0
+        },
+        {
+          "name": "武器系统",
+          "sample": "turret_longrange"
+        },
+        {
+          "name": "转向加速度（度/秒²）",
+          "sample": 60
+        },
+        {
+          "name": "表面部件耐久",
+          "sample": 4000
+        },
+        {
+          "name": "完整 ware 标签",
+          "sample": "equipment turret"
+        },
+        {
+          "name": "来源文件",
+          "sample": "assets/props/WeaponSystems/energy/macros/turret_arg_l_beam_01_mk1_macro.xml"
+        },
+        {
+          "name": "ware 分组",
+          "sample": "炮塔"
+        },
+        {
+          "name": "运输类型",
+          "sample": "equipment"
+        },
+        {
+          "name": "体积",
+          "sample": 1
+        },
+        {
+          "name": "最低价格（Cr）",
+          "sample": 58262
+        },
+        {
+          "name": "最高价格（Cr）",
+          "sample": 71209
+        },
+        {
+          "name": "生产方式",
+          "sample": "default:10s x1"
+        },
+        {
+          "name": "生产资源",
+          "sample": "先进电子设备 ×10；能量电池 ×133；炮塔部件 ×31"
+        },
+        {
+          "name": "拥有势力",
+          "sample": "联盟、安提戈涅共和国、阿贡、公爵海盗"
+        },
+        {
+          "name": "许可证",
+          "sample": "capitalequipment"
+        },
+        {
+          "name": "component 引用",
+          "sample": "turret_arg_l_beam_01_mk1_macro"
+        },
+        {
+          "name": "标签摘要",
+          "sample": "装备、炮塔"
+        },
+        {
+          "name": "建造材料",
+          "sample": "先进电子设备 ×10；能量电池 ×133；炮塔部件 ×31"
+        },
+        {
+          "name": "弹体/导弹 类型",
+          "sample": "弹体"
+        },
+        {
+          "name": "弹体/导弹 单发伤害",
+          "sample": 375
+        },
+        {
+          "name": "弹体/导弹 速度（米/秒）",
+          "sample": 299792500
+        },
+        {
+          "name": "弹体/导弹 寿命（秒）",
+          "sample": 4
+        },
+        {
+          "name": "弹体/导弹 射程（米）",
+          "sample": 8600
+        },
+        {
+          "name": "弹体/导弹 射程来源",
+          "sample": "XML 显式 range"
+        },
+        {
+          "name": "弹体/导弹 数据状态",
+          "sample": "已确认"
+        },
+        {
+          "name": "弹体/导弹 名称状态",
+          "sample": "无 text 引用"
+        },
+        {
+          "name": "弹药值",
+          "sample": 5
+        },
+        {
+          "name": "弹药装填（秒）",
+          "sample": 12
+        },
+        {
+          "name": "弹体/导弹 原始 text 引用",
+          "sample": "{20105,6374}"
+        },
+        {
+          "name": "弹体/导弹 射速（发/秒）",
+          "sample": 2.4
+        },
+        {
+          "name": "射速（发/秒）",
+          "sample": 2.4
+        },
+        {
+          "name": "弹体/导弹 理论 DPS（估算）",
+          "sample": 416
+        },
+        {
+          "name": "生产资源原文",
+          "sample": "default=advancedelectronics x10; default=energycells x133; default=turretcomponents x31"
+        }
+      ]
+    },
+    {
+      "dataset": "equipment",
+      "count": 296,
+      "fields": [
+        {
+          "name": "中文名",
+          "sample": "ARG L 均衡引擎 Mk1"
+        },
+        {
+          "name": "英文名",
+          "sample": "ARG L All-round Engine Mk1"
+        },
+        {
+          "name": "类型",
+          "sample": "引擎"
+        },
+        {
+          "name": "尺寸",
+          "sample": "L"
+        },
+        {
+          "name": "制造种族",
+          "sample": "Argon"
+        },
+        {
+          "name": "Mk",
+          "sample": 1
+        },
+        {
+          "name": "关键参数",
+          "sample": "前向推力 3900；旅行推力 30.53"
+        },
+        {
+          "name": "平均价格（Cr）",
+          "sample": 357242
+        },
+        {
+          "name": "装备 macro",
+          "sample": "engine_arg_l_allround_01_mk1_macro"
+        },
+        {
+          "name": "ware ID",
+          "sample": "engine_arg_l_allround_01_mk1"
+        },
+        {
+          "name": "数据状态",
+          "sample": "已确认"
+        },
+        {
+          "name": "名称状态",
+          "sample": "中文已解析"
+        },
+        {
+          "name": "原始 text 引用",
+          "sample": "{20107,3004}"
+        },
+        {
+          "name": "原始类型",
+          "sample": "engine"
+        },
+        {
+          "name": "制造种族原始值",
+          "sample": "argon"
+        },
+        {
+          "name": "前向推力",
+          "sample": 3900
+        },
+        {
+          "name": "反向推力",
+          "sample": 3705
+        },
+        {
+          "name": "助推持续（秒）",
+          "sample": 27
+        },
+        {
+          "name": "助推恢复（秒）",
+          "sample": 92
+        },
+        {
+          "name": "旅行模式充能（秒）",
+          "sample": 18
+        },
+        {
+          "name": "旅行模式推力",
+          "sample": 30.53
+        },
+        {
+          "name": "完整 ware 标签",
+          "sample": "engine equipment"
+        },
+        {
+          "name": "来源文件",
+          "sample": "assets/props/Engines/macros/engine_arg_l_allround_01_mk1_macro.xml"
+        },
+        {
+          "name": "ware 分组",
+          "sample": "引擎"
+        },
+        {
+          "name": "运输类型",
+          "sample": "equipment"
+        },
+        {
+          "name": "体积",
+          "sample": 1
+        },
+        {
+          "name": "最低价格（Cr）",
+          "sample": 321518
+        },
+        {
+          "name": "最高价格（Cr）",
+          "sample": 392966
+        },
+        {
+          "name": "生产方式",
+          "sample": "default:20s x1"
+        },
+        {
+          "name": "生产资源",
+          "sample": "反物质转换器 ×147；能量电池 ×25；引擎部件 ×67"
+        },
+        {
+          "name": "拥有势力",
+          "sample": "联盟、安提戈涅共和国、阿贡、公爵海盗、哈提克瓦自由联盟"
+        },
+        {
+          "name": "许可证",
+          "sample": "generaluseequipment"
+        },
+        {
+          "name": "component 引用",
+          "sample": "engine_arg_l_allround_01_mk1_macro"
+        },
+        {
+          "name": "标签摘要",
+          "sample": "引擎、装备"
+        },
+        {
+          "name": "建造材料",
+          "sample": "反物质转换器 ×147；能量电池 ×25；引擎部件 ×67"
+        },
+        {
+          "name": "护盾容量（MJ）",
+          "sample": 55200
+        },
+        {
+          "name": "护盾恢复（MW）",
+          "sample": 270
+        },
+        {
+          "name": "护盾延迟（秒）",
+          "sample": 15
+        },
+        {
+          "name": "生产资源原文",
+          "sample": "default=antimatterconverters x147; default=energycells x25; default=engineparts x67"
+        }
+      ]
+    }
+  ],
+  "derived": {
+    "sectors.json": "来自 share-data.json 中 type 为 sector、cluster、map 的公开分享记录。",
+    "lore.json": "来自 share-data.json 中 type 为 lore、lore_section、lore_box 的公开分享记录。",
+    "share-data.json": "来自 legacy 分享卡数据，已移除本地 source 路径。"
+  }
+}

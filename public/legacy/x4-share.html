@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<script id="x4-theme-preflight">
+(function(){
+  try{
+    const p = new URLSearchParams(location.search);
+    const hash = String(location.hash || '');
+    const hashTheme = (hash.match(/[?&]theme=(day|night)\b/) || [])[1];
+    const mode = p.get('theme') || hashTheme || localStorage.getItem('x4-dashboard-theme-mode');
+    const dayMode = mode === 'day';
+    document.documentElement.classList.add('x4-preflight-lock');
+    document.documentElement.style.backgroundColor = dayMode ? '#eae8e3' : '#050b10';
+    const lockStyle = document.createElement('style');
+    lockStyle.id = 'x4-preflight-lock-style';
+    lockStyle.textContent = 'html.x4-preflight-lock,html.x4-preflight-lock body{background:' + (dayMode ? '#eae8e3' : '#050b10') + '!important}html.x4-preflight-lock body{visibility:hidden!important}';
+    document.head.appendChild(lockStyle);
+    if(dayMode){
+      document.documentElement.dataset.theme = 'day';
+      document.documentElement.classList.add('x4-day-preflight');
+      document.documentElement.style.backgroundColor = '#eae8e3';
+      const style = document.createElement('style');
+      style.id = 'x4-theme-preflight-style';
+      style.textContent = 'html.x4-day-preflight,html.x4-day-preflight body{background:#eae8e3!important;color:#111!important}html.x4-day-preflight body:before{background:#eae8e3!important}';
+      document.head.appendChild(style);
+      document.addEventListener('DOMContentLoaded', function(){
+        document.body.classList.add('x4-day-mode');
+      }, {once:true});
+    }
+    setTimeout(function(){
+      document.documentElement.classList.remove('x4-preflight-lock');
+      document.getElementById('x4-preflight-lock-style')?.remove();
+    }, 900);
+  }catch(_){}
+})();
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>X4 分享卡</title>
+<script src="x4-share-data.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#040912;--panel:#08131d;--panel2:#0b1824;--line:rgba(130,170,195,.28);--text:#edf6fb;--muted:#91a8b7;--cyan:#5fe1ff;--gold:#ffd27b;--red:#ff6b7c;--green:#75e0a2;--violet:#c889ff}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#02060b;color:var(--text);font-family:"Microsoft YaHei UI","PingFang SC",system-ui,sans-serif;letter-spacing:0}
+body{display:grid;place-items:center;padding:22px;overflow:auto}.shell{display:grid;gap:14px}.hint{width:1200px;max-width:100%;display:flex;justify-content:space-between;color:#5f7585;font:12px ui-monospace,Consolas,monospace}.hint code{color:#9bdff0}
+#x4-share-card{width:1200px;height:675px;position:relative;overflow:hidden;border:1px solid rgba(126,158,183,.42);background:radial-gradient(circle at 82% 12%,rgba(95,225,255,.14),transparent 28%),radial-gradient(circle at 13% 92%,rgba(200,137,255,.11),transparent 26%),linear-gradient(135deg,#07111b 0%,#0b1723 52%,#050a12 100%);box-shadow:0 28px 70px rgba(0,0,0,.48);isolation:isolate}
+#x4-share-card:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:32px 32px;mask:linear-gradient(90deg,transparent,black 12%,black 88%,transparent);opacity:.45;pointer-events:none}
+#x4-share-card:after{content:"X4 COMMUNITY DATABASE";position:absolute;right:28px;bottom:20px;color:rgba(151,178,194,.22);font:800 18px ui-monospace,Consolas,monospace;letter-spacing:.28em}
+.card-inner{position:relative;z-index:1;height:100%;padding:34px 42px 30px;display:grid;gap:18px;min-width:0}.eyebrow{display:flex;gap:10px;align-items:center;color:var(--cyan);font:800 13px ui-monospace,Consolas,monospace;letter-spacing:.15em}.eyebrow i{width:44px;height:2px;background:var(--cyan);box-shadow:0 0 18px var(--cyan)}
+h1{margin:12px 0 6px;font-size:48px;line-height:1.08;letter-spacing:0;color:#f7fbff;text-wrap:balance}.subtitle{color:#aec4d1;font-size:20px;line-height:1.35}.summary{margin:14px 0 0;color:#d7e6ee;font-size:17px;line-height:1.62;text-align:left}.source{border:1px solid rgba(126,158,183,.2);background:rgba(3,10,17,.58);padding:11px 13px;color:#8fa6b5;font-size:12px;line-height:1.45}.source b{color:#d7e6ee}.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.tag{border:1px solid rgba(95,225,255,.24);color:#9bdff0;background:rgba(95,225,255,.06);padding:4px 7px;font:800 10px ui-monospace,Consolas,monospace}
+.field,.detail-line{border:1px solid rgba(126,158,183,.2);background:rgba(3,10,17,.55)}.field{min-height:56px;padding:9px 11px}.field.wide,.detail-line.wide{grid-column:1/-1}.field b,.detail-line b{display:block;color:#6f8ea2;font:800 10px ui-monospace,Consolas,monospace;margin-bottom:4px}.field span{display:block;color:#edf6fb;font-size:18px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.data-card .card-inner{grid-template-rows:auto minmax(0,1fr) auto}.data-head{display:grid;grid-template-columns:minmax(0,1fr) 355px;gap:22px;align-items:start}.data-title{min-width:0}.data-kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}.detail-sections{min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.detail-sections.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-section{min-width:0;border:1px solid rgba(126,158,183,.2);background:rgba(4,12,20,.68);padding:9px 11px;overflow:hidden}.detail-section.wide{grid-column:1/-1}.detail-section h3{margin:0 0 7px;color:var(--cyan);font:800 11px ui-monospace,Consolas,"Microsoft YaHei UI",sans-serif;letter-spacing:.08em}.detail-lines{display:grid;grid-template-columns:1fr 1fr;gap:5px}.detail-line{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1fr);gap:7px;align-items:center;min-height:28px;padding:4px 7px}.detail-line b{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.detail-line span{min-width:0;color:#eef8ff;font-size:12px;line-height:1.18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-card .card-inner{grid-template-columns:minmax(0,1fr) 540px;gap:26px}.map-main{display:flex;flex-direction:column;min-width:0}.map-fields{margin-top:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.map-side{display:grid;grid-template-rows:400px auto;gap:14px}.map-visual{position:relative;overflow:hidden;border:1px solid rgba(126,158,183,.26);background:#06111a}.map-visual img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.95) contrast(1.05)}.map-visual.has-image:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 46%,transparent 40%,rgba(2,6,10,.32) 100%);z-index:2;pointer-events:none}.map-visual:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,6,10,.04),rgba(2,6,10,.36)),linear-gradient(90deg,rgba(2,6,10,.48),transparent 44%);pointer-events:none;z-index:2}.map-grid{position:absolute;inset:0;background:linear-gradient(rgba(95,225,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(95,225,255,.045) 1px,transparent 1px);background-size:30px 30px}.map-dot{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 0 0 8px rgba(95,225,255,.16),0 0 28px rgba(95,225,255,.9);transform:translate(-50%,-50%);z-index:3}.map-dot:after{content:"";position:absolute;inset:-18px;border:1px solid rgba(255,255,255,.45);border-radius:50%;animation:pulse 1.8s ease-out infinite}.resource-list{position:absolute;left:16px;right:16px;bottom:16px;z-index:4;display:grid;gap:6px}.resource-list span{display:flex;justify-content:space-between;border:1px solid rgba(126,158,183,.22);background:rgba(3,10,17,.78);padding:7px 9px;color:#d7e6ee;font-size:13px}.resource-list i{font-style:normal;color:#ffd27b}.map-caption{position:absolute;left:16px;top:16px;z-index:4;color:#eaf6fb;font:800 12px ui-monospace,Consolas}.map-caption small{display:block;margin-top:4px;color:#86a0b2;font:700 10px ui-monospace,Consolas}
+.lore-card .card-inner{grid-template-columns:minmax(0,1fr) 390px;gap:28px}.lore-main{display:flex;flex-direction:column;min-width:0}.lore-main .summary{font-size:23px;line-height:1.75;margin-top:22px}.lore-fields{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}.lore-visual{position:relative;border:1px solid rgba(126,158,183,.22);background:linear-gradient(180deg,rgba(5,14,23,.75),rgba(2,7,13,.72));overflow:hidden}.lore-visual .orb{position:absolute;width:230px;height:230px;border-radius:50%;left:50%;top:44%;transform:translate(-50%,-50%);border:1px solid rgba(95,225,255,.38);box-shadow:0 0 60px rgba(95,225,255,.16),inset 0 0 50px rgba(95,225,255,.08)}.lore-visual .orb:before,.lore-visual .orb:after{content:"";position:absolute;inset:26px;border:1px dashed rgba(255,210,123,.28);border-radius:50%;animation:spin 12s linear infinite}.lore-visual .orb:after{inset:58px;border-color:rgba(200,137,255,.35);animation-duration:8s;animation-direction:reverse}.big-code{position:absolute;right:20px;bottom:18px;color:rgba(95,225,255,.16);font:900 72px ui-monospace,Consolas,monospace}
+.notfound h1{font-size:44px}.portrait #x4-share-card,#x4-share-card.portrait{width:900px;height:1400px}.portrait .hint{width:900px}.portrait .map-card .card-inner,.portrait .lore-card .card-inner,.portrait .data-card .card-inner{grid-template-columns:1fr;grid-template-rows:auto;min-height:100%;padding:48px}.portrait .detail-sections{grid-template-columns:1fr 1fr}.portrait h1,#x4-share-card.portrait h1{font-size:58px}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{from{opacity:.8;transform:scale(.5)}to{opacity:0;transform:scale(1.25)}}@media(max-width:980px){body{padding:0;place-items:start}.hint{display:none}#x4-share-card{transform-origin:top left;transform:scale(.5)}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<style id="x4-share-day-theme">
+html.x4-share-day{color-scheme:light}
+html.x4-share-day body{
+  background-color:#eae8e3!important;
+  background-image:
+    radial-gradient(rgba(17,17,17,.12) 1.2px,transparent 1.3px),
+    linear-gradient(90deg,rgba(17,17,17,.05) 1px,transparent 1px),
+    linear-gradient(rgba(17,17,17,.05) 1px,transparent 1px)!important;
+  background-size:24px 24px,48px 48px,48px 48px!important;
+  color:#111!important;
+}
+html.x4-share-day #x4-share-card{
+  border:4px solid #111!important;
+  background:#fff!important;
+  background-image:
+    linear-gradient(135deg,rgba(49,89,143,.08),transparent 42%),
+    linear-gradient(180deg,#fff,#f4f3ef)!important;
+  box-shadow:8px 8px 0 rgba(17,17,17,.14)!important;
+}
+html.x4-share-day #x4-share-card:before{
+  background:
+    linear-gradient(rgba(17,17,17,.055) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(17,17,17,.045) 1px,transparent 1px)!important;
+  opacity:1!important;
+}
+html.x4-share-day #x4-share-card:after{
+  color:rgba(17,17,17,.12)!important;
+}
+html.x4-share-day .hint,
+html.x4-share-day .hint code{
+  color:#31598f!important;
+}
+html.x4-share-day .eyebrow,
+html.x4-share-day .detail-section h3,
+html.x4-share-day .field b,
+html.x4-share-day .detail-line b{
+  color:#31598f!important;
+  letter-spacing:.04em!important;
+}
+html.x4-share-day .eyebrow i{
+  background:#31598f!important;
+  box-shadow:none!important;
+}
+html.x4-share-day h1{
+  color:#111!important;
+}
+html.x4-share-day .subtitle{
+  color:#4f5863!important;
+}
+html.x4-share-day .summary{
+  color:#2f343a!important;
+}
+html.x4-share-day .source,
+html.x4-share-day .field,
+html.x4-share-day .detail-line,
+html.x4-share-day .detail-section{
+  background:#fff!important;
+  border:1px solid rgba(44,48,54,.35)!important;
+  color:#2f343a!important;
+  box-shadow:2px 2px 0 rgba(17,17,17,.06)!important;
+}
+html.x4-share-day .source{
+  background:#f7f6f2!important;
+}
+html.x4-share-day .source b,
+html.x4-share-day .field span,
+html.x4-share-day .detail-line span{
+  color:#111!important;
+}
+html.x4-share-day .tag{
+  background:#edf3ff!important;
+  border:1px solid rgba(49,89,143,.42)!important;
+  color:#163f83!important;
+  border-radius:6px!important;
+}
+html.x4-share-day .map-visual,
+html.x4-share-day .lore-visual{
+  background:#f4f3ef!important;
+  border:2px solid rgba(44,48,54,.72)!important;
+}
+html.x4-share-day .map-visual:after{
+  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.18))!important;
+}
+html.x4-share-day .map-visual.has-image:before{
+  background:linear-gradient(180deg,transparent 62%,rgba(255,255,255,.32))!important;
+}
+html.x4-share-day .map-caption{
+  color:#111!important;
+  background:rgba(255,255,255,.88)!important;
+  border:1px solid rgba(44,48,54,.3)!important;
+  padding:7px 9px!important;
+}
+html.x4-share-day .map-caption small{
+  color:#4f5863!important;
+}
+html.x4-share-day .resource-list span{
+  background:rgba(255,255,255,.92)!important;
+  color:#111!important;
+  border:1px solid rgba(44,48,54,.34)!important;
+}
+html.x4-share-day .resource-list i,
+html.x4-share-day .big-code{
+  color:#1a53c4!important;
+}
+html.x4-share-day .lore-visual .orb{
+  border-color:rgba(49,89,143,.34)!important;
+  box-shadow:none!important;
+}
+</style>
+<script id="x4-share-day-theme-script">
+(function(){
+  function readParams(){
+    const raw = location.hash && location.hash.includes('?')
+      ? location.hash.slice(location.hash.indexOf('?') + 1)
+      : location.search.slice(1);
+    return new URLSearchParams(raw);
+  }
+  function wantedDay(){
+    const p = readParams();
+    const explicit = p.get('theme');
+    if(explicit) return explicit === 'day';
+    try{ return localStorage.getItem('x4-dashboard-theme-mode') === 'day'; }catch(_){ return false; }
+  }
+  function apply(){
+    const day = wantedDay();
+    document.documentElement.classList.toggle('x4-share-day', day);
+    if(document.body) document.body.classList.toggle('x4-share-day', day);
+  }
+  apply();
+  window.addEventListener('hashchange', apply);
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+})();
+</script>
+</head>
+<body>
+<main class="shell">
+  <div id="x4-share-card" aria-label="X4 分享卡"></div>
+  <div class="hint"><span>BOT READY: <code id="readyState">0</code></span><span id="routeText"></span></div>
+</main>
+<script>
+(function(){
+  const DATA = window.X4_SHARE_DATA || {records:[],meta:{},images:{}};
+  const card = document.getElementById('x4-share-card');
+  const readyState = document.getElementById('readyState');
+  const routeText = document.getElementById('routeText');
+  const labels = {ship:'舰船',weapon:'武器',turret:'炮塔',equipment:'装备',sector:'星区',cluster:'星系',map:'星图',lore:'编年史',lore_section:'编年史条目',lore_box:'编年史卡片'};
+  function params(){const raw=location.hash&&location.hash.includes('?')?location.hash.slice(location.hash.indexOf('?')+1):location.search.slice(1);return new URLSearchParams(raw)}
+  function norm(v){return String(v||'').trim().toLowerCase()}
+  function esc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+  const ZERO_SLOT_FIELDS=new Set(['主武器槽','S 武器槽','M 武器槽','L 武器槽','炮塔槽','S 炮塔槽','M 炮塔槽','L 炮塔槽','护盾槽','S 护盾槽','M 护盾槽','L 护盾槽','XL 护盾槽','引擎槽','XS 停靠/机库','S 停靠/机库','M 停靠/机库','L 停靠/机库','XL 停靠/机库','太空服停靠']);
+  const TECH_FIELD_RULES=[/^__/,/macro/i,/ware ID/i,/component 引用/i,/来源文件/,/原始 text 引用/,/生产资源原文/,/完整 ware 标签/,/制造种族原始值/,/名称状态/,/数据状态/,/ware 分组/,/运输类型/];
+  const VALUE_TRANSLATIONS={
+    license:{capitalship:'主力舰船许可证',generaluseship:'通用舰船许可证',militaryship:'军用舰船许可证',generaluseequipment:'通用装备许可证',militaryequipment:'军用装备许可证',capitalequipment:'主力舰装备许可证',stationmodule:'空间站模块许可证'},
+    weaponSystem:{turret_longrange:'远程炮塔系统',turret_midrange:'中程炮塔系统',turret_shortrange:'近程炮塔系统',weapon_standard:'标准武器系统',weapon_mining:'采矿武器系统',missile_dumbfire:'无制导导弹系统',missile_guided:'制导导弹系统',torpedo:'鱼雷系统'}
+  };
+  const PRODUCTION_METHOD_LABELS={default:'常规生产',terran:'泰伦生产',closedloop:'闭环生产',universal:'通用生产'};
+  function zeroLike(v){return /^0(?:\.0+)?$/.test(String(v??'').replace(/,/g,'').trim())}
+  function playerPair(pair){const key=String(pair?.[0]??''),value=pair?.[1];if(!key)return false;if(TECH_FIELD_RULES.some(rule=>rule.test(key)))return false;if(value===undefined||value===null||String(value).trim()===''||String(value).trim()==='—')return false;return !(ZERO_SLOT_FIELDS.has(key)&&zeroLike(value))}
+  function translateCodeValue(value,dict){return String(value).split(/[,;]\s*/).filter(Boolean).map(part=>dict[part.trim()]||part.trim()).join('、')}
+  function formatProductionMethod(value){return String(value).split(/；|;\s*/).filter(Boolean).map(raw=>{const m=raw.trim().match(/^([^:=]+)[:=](\d+(?:\.\d+)?)s(?:\s*x\s*(\d+(?:\.\d+)?))?$/i);if(!m)return raw.trim();return `${PRODUCTION_METHOD_LABELS[m[1]]||m[1]} · ${m[2]} 秒 · 产出 ${m[3]||1}`}).join('；')}
+  function displayPair(pair){const key=String(pair?.[0]??''),value=pair?.[1];if(key==='许可证')return [key,translateCodeValue(value,VALUE_TRANSLATIONS.license)];if(key==='武器系统')return [key,translateCodeValue(value,VALUE_TRANSLATIONS.weaponSystem)];if(key==='生产方式')return [key,formatProductionMethod(value)];return [key,value]}
+  function sameDisplayValue(a,b){return String(a??'').replace(/\s+/g,'').trim()===String(b??'').replace(/\s+/g,'').trim()}
+  function playerPairs(fields){const raw=(fields||[]).filter(playerPair);return raw.filter(pair=>!(pair[0]==='生产资源'&&raw.some(p=>p[0]==='建造材料')&&sameDisplayValue(pair[1],raw.find(p=>p[0]==='建造材料')?.[1]))).map(displayPair)}
+  function findRecord(type,id,q){
+    const records=DATA.records||[];
+    if(type&&id){let hit=records.find(r=>norm(r.type)===norm(type)&&norm(r.id)===norm(id));if(hit)return hit;if(type==='map')return records.find(r=>norm(r.type)==='sector'&&norm(r.id)===norm(id))}
+    if(id){let hit=records.find(r=>norm(r.id)===norm(id));if(hit)return hit}
+    const query=norm(q||id);
+    if(query){let pool=type?records.filter(r=>norm(r.type)===norm(type)||(type==='map'&&norm(r.type)==='sector')):records;return pool.find(r=>norm(r.title)===query||norm(r.english)===query||(r.aliases||[]).some(a=>norm(a)===query))||pool.find(r=>norm(r.searchText).includes(query))}
+    return records[0];
+  }
+  function fitTitle(text){const len=[...String(text||'')].length;if(len>30)return 'style="font-size:36px"';if(len>22)return 'style="font-size:42px"';return ''}
+  function tagHtml(record){return (record.tags||[]).filter(Boolean).slice(0,6).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}
+  function sourceHtml(record){const tags=tagHtml(record);return `<div class="source"><b>来源：</b>${esc(record.source||'X4 星际数据库')}<br><b>边界：</b>静态资料卡，不代表当前存档状态。${tags?`<div class="tags">${tags}</div>`:''}</div>`}
+  function itemWideClass(i,total,pair){return total%2===1&&i===total-1&&!['最低价格（Cr）','最高价格（Cr）'].includes(String(pair?.[0]||''))?' wide':''}
+  const SHARE_PRIORITY_FIELDS=new Map([['武器系统',1],['许可证',2],['生产方式',3],['建造材料',4],['最低价格（Cr）',5],['最高价格（Cr）',6]]);
+  function prioritizePairs(pairs){return pairs.map((pair,i)=>({pair,i,rank:SHARE_PRIORITY_FIELDS.get(pair[0])??50})).sort((a,b)=>a.rank-b.rank||a.i-b.i).map(x=>x.pair)}
+  function fieldHtml(fields,max=8){const pairs=playerPairs(fields).slice(0,max);return pairs.map((pair,i)=>`<div class="field${itemWideClass(i,pairs.length,pair)}"><b>${esc(pair[0])}</b><span title="${esc(pair[1])}">${esc(pair[1])}</span></div>`).join('')}
+  function lineHtml(fields,max=8){const pairs=prioritizePairs(playerPairs(fields)).slice(0,max);return pairs.map((pair,i)=>`<div class="detail-line${itemWideClass(i,pairs.length,pair)}"><b title="${esc(pair[0])}">${esc(pair[0])}</b><span title="${esc(pair[1])}">${esc(pair[1])}</span></div>`).join('')}
+  function detailHtml(record){
+    let sections=(record.detailSections||[]).map(s=>({...s,fields:playerPairs(s.fields)})).filter(s=>s.fields.length);
+    if(!sections.length&&record.fields?.length)sections=[{title:'核心字段',fields:record.fields}];
+    sections=sections.slice(0,4);
+    return sections.map((s,i)=>`<section class="detail-section${sections.length%2===1&&i===sections.length-1?' wide':''}"><h3>${esc(s.title)}</h3><div class="detail-lines">${lineHtml(s.fields,8)}</div></section>`).join('');
+  }
+  function imageFor(record){return record.image||(record.imageKey&&DATA.images?.clusters?.[record.imageKey])||''}
+  function mapDot(record){
+    const map=record.map||{},x=Number(map.x??map.svgX??840),y=Number(map.y??map.svgY??582),w=Number(map.width||1680),h=Number(map.height||1165);
+    const left=Math.max(6,Math.min(94,x/w*100)),top=Math.max(6,Math.min(94,y/h*100));
+    return `<div class="map-dot" style="left:${left}%;top:${top}%"></div>`;
+  }
+  function resources(record){return (record.resources||[]).slice(0,5).map(r=>`<span><b>${esc(r.label||r.ware)}</b><i>${esc(r.yield||r.amount||'—')}</i></span>`).join('')}
+  function renderData(record){
+    card.className='data-card';
+    const sections=(record.detailSections||[]).map(s=>playerPairs(s.fields)).filter(a=>a.length).slice(0,4);
+    card.innerHTML=`<div class="card-inner"><section class="data-head"><div class="data-title"><div class="eyebrow"><i></i>${esc(record.label||labels[record.type]||record.type)}</div><h1 ${fitTitle(record.title)}>${esc(record.title)}</h1><div class="subtitle">${esc(record.subtitle||record.english||'')}</div><p class="summary">${esc(record.summary||'该条目来自本地 X4 数据索引。')}</p></div><div class="data-kpis">${fieldHtml(record.fields,6)}</div></section><section class="detail-sections ${sections.length<=3?'compact':''}">${detailHtml(record)}</section>${sourceHtml(record)}</div>`;
+  }
+  function renderMap(record){
+    card.className='map-card';
+    const img=imageFor(record);
+    const visual=img?`<img src="${esc(img)}" alt="${esc(record.title)}">`:`<div class="map-grid"></div>${mapDot(record)}`;
+    const visualClass=img?'map-visual has-image':'map-visual no-image';
+    const caption=img?'游戏内星区图片':'星图定位';
+    card.innerHTML=`<div class="card-inner"><section class="map-main"><div class="eyebrow"><i></i>${esc(record.label||labels[record.type]||record.type)}</div><h1 ${fitTitle(record.title)}>${esc(record.title)}</h1><div class="subtitle">${esc(record.subtitle||'')}</div><p class="summary">${esc(record.summary||'该条目来自本地 X4 星图索引。')}</p><div class="map-fields">${fieldHtml(record.fields,6)}</div></section><aside class="map-side"><div class="${visualClass}">${visual}<div class="map-caption">${esc(record.title)}<small>${esc(record.clusterTitle||record.subtitle||caption)} · ${caption}</small></div><div class="resource-list">${resources(record)}</div></div>${sourceHtml(record)}</aside></div>`;
+  }
+  function renderLore(record){
+    card.className='lore-card';
+    card.innerHTML=`<div class="card-inner"><section class="lore-main"><div class="eyebrow"><i></i>${esc(record.label||labels[record.type]||record.type)}</div><h1 ${fitTitle(record.title)}>${esc(record.title)}</h1><div class="subtitle">${esc(record.subtitle||'')}</div><p class="summary">${esc(record.summary||'该条目来自本地 X4 编年史索引。')}</p><div class="lore-fields">${fieldHtml(record.fields,4)}</div></section><aside class="map-side"><div class="lore-visual"><div class="orb"></div><div class="big-code">${esc((record.type||'LOR').slice(0,3).toUpperCase())}</div></div>${sourceHtml(record)}</aside></div>`;
+  }
+  function render(record){
+    const p=params(),layout=p.get('size')||p.get('layout')||'';
+    document.body.classList.toggle('portrait',layout==='portrait');card.classList.toggle('portrait',layout==='portrait');
+    if(!record){card.className='notfound';card.innerHTML=`<div class="card-inner"><div><div class="eyebrow"><i></i>NOT FOUND</div><h1>未找到分享条目</h1><p class="summary">请检查 type 与 id，或改用 q 参数让页面做一次本地索引搜索。</p></div></div>`;return}
+    if(['ship','weapon','turret','equipment'].includes(record.type))return renderData(record);
+    if(['sector','map','cluster'].includes(record.type))return renderMap(record);
+    return renderLore(record);
+  }
+  function exportText(record){
+    if(!record)return '未找到分享条目';
+    const lines=[`【${record.label||labels[record.type]||record.type}】${record.title}`,record.subtitle||'',record.summary||''];
+    const pairs=playerPairs((record.allFields&&record.allFields.length?record.allFields:record.fields)||[]);
+    pairs.slice(0,24).forEach(pair=>lines.push(`${pair[0]}：${pair[1]}`));
+    lines.push(`来源：${record.source||'X4 星际数据库'}`);lines.push('边界：静态资料卡，不代表当前存档状态。');
+    return lines.filter(Boolean).join('\n');
+  }
+  function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight,maxLines){
+    const chars=[...String(text||'')];let line='',lines=[];
+    for(const ch of chars){const test=line+ch;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=ch;if(lines.length>=maxLines)break}else line=test}
+    if(lines.length<maxLines&&line)lines.push(line);
+    lines.slice(0,maxLines).forEach((ln,i)=>ctx.fillText(ln,x,y+i*lineHeight));
+  }
+  let currentRecord=null;
+  function exportPng(record){
+    record=record||currentRecord;
+    const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=675;
+    const ctx=canvas.getContext('2d'),grad=ctx.createLinearGradient(0,0,1200,675);
+    grad.addColorStop(0,'#07111b');grad.addColorStop(.56,'#0b1723');grad.addColorStop(1,'#050a12');ctx.fillStyle=grad;ctx.fillRect(0,0,1200,675);
+    ctx.strokeStyle='rgba(126,158,183,.5)';ctx.lineWidth=2;ctx.strokeRect(1,1,1198,673);
+    ctx.fillStyle='#5fe1ff';ctx.font='800 18px Microsoft YaHei UI, sans-serif';ctx.fillText(record?.label||labels[record?.type]||record?.type||'X4',46,64);
+    ctx.fillStyle='#f7fbff';ctx.font='700 52px Microsoft YaHei UI, sans-serif';wrapCanvasText(ctx,record?.title||'未找到分享条目',46,134,760,60,2);
+    ctx.fillStyle='#aec4d1';ctx.font='24px Microsoft YaHei UI, sans-serif';wrapCanvasText(ctx,record?.subtitle||'',46,260,760,32,2);
+    ctx.fillStyle='#d7e6ee';ctx.font='21px Microsoft YaHei UI, sans-serif';wrapCanvasText(ctx,record?.summary||'该条目来自本地 X4 数据索引。',46,346,760,34,4);
+    const pairs=playerPairs((record?.allFields&&record.allFields.length?record.allFields:record?.fields)||[]);
+    ctx.fillStyle='rgba(3,10,17,.68)';ctx.fillRect(46,528,760,94);ctx.strokeStyle='rgba(126,158,183,.25)';ctx.strokeRect(46,528,760,94);
+    ctx.fillStyle='#91a8b7';ctx.font='17px Microsoft YaHei UI, sans-serif';wrapCanvasText(ctx,pairs.slice(0,6).map(p=>`${p[0]}：${p[1]}`).join('  /  '),66,565,720,26,2);
+    ctx.fillStyle='rgba(95,225,255,.12)';ctx.beginPath();ctx.arc(1000,310,170,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(95,225,255,.7)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(1000,310,130,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(95,225,255,.22)';ctx.font='900 76px Consolas, monospace';ctx.fillText((record?.type||'X4').slice(0,3).toUpperCase(),905,335);
+    return canvas.toDataURL('image/png');
+  }
+  function updateRoute(){
+    window.X4ShareReady=false;document.body.dataset.shareReady='0';readyState.textContent='0';
+    const p=params();
+    currentRecord=findRecord(p.get('type'),p.get('id'),p.get('q'));
+    render(currentRecord);
+    routeText.textContent=location.hash||location.search||'#/share';
+    window.X4Share={data:DATA,record:currentRecord,findRecord,exportText:()=>exportText(currentRecord),exportPng};
+    window.X4ShareReady=true;document.body.dataset.shareReady='1';readyState.textContent='1';
+  }
+  window.addEventListener('hashchange',updateRoute);
+  updateRoute();
+})();
+</script>
+</body>
+</html>

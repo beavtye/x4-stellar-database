@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+!.env.example
+*.log
+*.sqlite3
+*.db
+.x4_*
+review_server.log
+review_server.err.log
