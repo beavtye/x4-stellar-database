@@ -1862,6 +1862,17 @@ th.select-col {
   font-size: 12px;
 }
 
+.scan-warnings {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.scan-warnings small {
+  color: var(--danger);
+  font-size: 11px;
+}
+
 .raw-link-list {
   display: grid;
   gap: 10px;
