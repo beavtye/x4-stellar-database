@@ -122,8 +122,9 @@ function downloadExamplePackage() {
   status.value = '已下载完整示例包。下载后复制字段并替换成自己的数据，再通过“选择 CSV / JSON 文件”导入。'
 }
 
-function downloadCurrentTemplate() {
-  const template = importTemplateForDataset(props.dataset)
+async function downloadCurrentTemplate() {
+  status.value = `正在生成 ${currentDatasetLabel.value} 导入模板...`
+  const template = await importTemplateForDataset(props.dataset)
   const csv = `\uFEFF${toCsv(template.rows, template.headers)}`
   downloadText(`X4_${currentDatasetLabel.value}_导入模板.csv`, csv, 'text/csv;charset=utf-8')
   status.value = `已下载 ${currentDatasetLabel.value} 导入模板。`

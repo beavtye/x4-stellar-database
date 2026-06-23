@@ -2,7 +2,8 @@
 defineProps({
   datasets: { type: Object, required: true },
   current: { type: String, required: true },
-  stats: { type: Object, required: true }
+  stats: { type: Object, required: true },
+  datasetStats: { type: Object, default: () => ({}) }
 })
 defineEmits(['switch'])
 </script>
@@ -31,7 +32,7 @@ defineEmits(['switch'])
           <b>{{ item.label }}</b>
           <small>{{ item.description }}</small>
         </span>
-        <span class="nav-count">{{ item.payload.data.length }}</span>
+        <span class="nav-count">{{ datasetStats[item.key] || '…' }}</span>
       </button>
     </nav>
 

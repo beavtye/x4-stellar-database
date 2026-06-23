@@ -1,4 +1,4 @@
-import { DATASETS, baseRows, rowIdentity } from '../dataIndex'
+import { DATASETS, baseRows, loadDatasetPayload, rowIdentity } from '../dataIndex'
 import sectors from '../data/sectors.json'
 import lore from '../data/lore.json'
 import { formatValue, isMissing } from './format'
@@ -38,7 +38,7 @@ const ID_FIELDS = [
   '中文名'
 ]
 
-export function lookupShareRecord(route) {
+export async function lookupShareRecord(route) {
   if (!route?.type || !route?.id) {
     return missingRecord(route, '缺少 type 或 id 参数')
   }
@@ -54,10 +54,11 @@ export function lookupShareRecord(route) {
   return missingRecord(route, `暂不支持的分享类型：${route.type}`)
 }
 
-export function exampleShareTarget(type = 'ship') {
+export async function exampleShareTarget(type = 'ship') {
   if (TYPE_TO_DATASET[type]) {
     const datasetKey = TYPE_TO_DATASET[type]
-    const row = baseRows(datasetKey)[0]
+    const payload = await loadDatasetPayload(datasetKey)
+    const row = baseRows(datasetKey, payload)[0]
     return row ? { type, id: rowIdentity(datasetKey, row) } : null
   }
   if (type === 'sector') {
@@ -71,10 +72,11 @@ export function exampleShareTarget(type = 'ship') {
   return null
 }
 
-function lookupCoreRecord(route) {
+async function lookupCoreRecord(route) {
   const datasetKey = TYPE_TO_DATASET[route.type]
   const config = DATASETS[datasetKey]
-  const rows = baseRows(datasetKey)
+  const payload = await loadDatasetPayload(datasetKey)
+  const rows = baseRows(datasetKey, payload)
   const id = normalizeId(route.id)
   const row = rows.find((item) => {
     if (normalizeId(rowIdentity(datasetKey, item)) === id) return true

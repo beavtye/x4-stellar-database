@@ -82,7 +82,13 @@ onBeforeUnmount(() => {
   <LorePage v-else-if="loreMode" :route-version="routeVersion" />
   <BenchmarkPage v-else-if="benchmarkMode" />
   <div v-else class="app-shell">
-    <AppSidebar :datasets="db.DATASETS" :current="db.dataset.value" :stats="db.stats.value" @switch="db.switchDataset" />
+    <AppSidebar
+      :datasets="db.DATASETS"
+      :current="db.dataset.value"
+      :stats="db.stats.value"
+      :dataset-stats="db.datasetCounts.value"
+      @switch="db.switchDataset"
+    />
 
     <main class="main">
       <TopBar
@@ -106,7 +112,9 @@ onBeforeUnmount(() => {
           <button type="button" class="btn" @click="db.selectVisible">勾选当前结果</button>
           <button type="button" class="btn ghost" @click="db.clearSelected">清空勾选</button>
         </div>
-        <p>为保证大数据量性能，当前视图显示前 {{ pageRows.length }} 条；搜索和导出仍基于完整筛选结果。</p>
+        <p v-if="db.loading.value">正在加载 {{ db.datasetConfig.value.label }} 数据...</p>
+        <p v-else-if="db.loadError.value">数据加载失败：{{ db.loadError.value }}</p>
+        <p v-else>为保证大数据量性能，当前视图显示前 {{ pageRows.length }} 条；搜索和导出仍基于完整筛选结果。</p>
       </section>
 
       <DataTable

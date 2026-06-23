@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import ShareCard from './ShareCard.vue'
 import { lookupShareRecord } from '../../utils/shareLookup'
 import { parseShareRoute, shareRouteText } from '../../utils/shareRoute'
@@ -12,8 +12,17 @@ const route = computed(() => {
   props.routeVersion
   return parseShareRoute()
 })
-const record = computed(() => lookupShareRecord(route.value))
+const record = ref(null)
 const routeText = computed(() => shareRouteText(route.value))
+
+watch(route, loadRecord, { immediate: true })
+
+async function loadRecord() {
+  clearReady()
+  record.value = null
+  record.value = await lookupShareRecord(route.value)
+  await setReady()
+}
 
 async function setReady() {
   await nextTick()
@@ -36,14 +45,12 @@ function clearReady() {
   delete document.body.dataset.shareReady
 }
 
-onMounted(setReady)
 onBeforeUnmount(clearReady)
-watch([record, route], setReady, { flush: 'post' })
 </script>
 
 <template>
   <main class="share-page" :class="`share-page-${route.layout}`">
-    <ShareCard :record="record" :layout="route.layout" :route-text="routeText" />
+    <ShareCard v-if="record" :record="record" :layout="route.layout" :route-text="routeText" />
     <p class="share-ready-hint">BOT READY: <code>1</code></p>
   </main>
 </template>

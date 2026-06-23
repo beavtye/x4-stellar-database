@@ -1,5 +1,5 @@
 import { computed, reactive, ref, watch } from 'vue'
-import { DATASETS, SOURCE_FIELD, SOURCE_TYPE_FIELD, VANILLA_SOURCE, baseRows, headersFor, rowIdentity } from '../dataIndex'
+import { DATASETS, SOURCE_FIELD, SOURCE_TYPE_FIELD, VANILLA_SOURCE, baseRows, headersFor, loadDatasetPayload, rowIdentity } from '../dataIndex'
 import { asNumber, compactText, isMissing, optionText } from '../utils/format'
 
 const IMPORT_KEY = 'x4_vue_imported_mod_packs'
@@ -15,6 +15,9 @@ export function useDatabase() {
   const selected = reactive(new Set())
   const currentRow = ref(null)
   const importedPacks = ref(loadImportedPacks())
+  const payloads = ref({})
+  const loading = ref(false)
+  const loadError = ref('')
 
   const importedRowsByDataset = computed(() => {
     const grouped = {}
@@ -25,7 +28,7 @@ export function useDatabase() {
           ...row,
           __import_pack_id: pack.id,
           __import_pack_name: pack.packageName,
-          __index: row.__index ?? baseRows(key).length + index,
+          __index: row.__index ?? (payloads.value[key]?.data?.length || 0) + index,
           [SOURCE_FIELD]: pack.packageName,
           [SOURCE_TYPE_FIELD]: 'mod'
         })))
@@ -34,10 +37,18 @@ export function useDatabase() {
     return grouped
   })
 
-  const rows = computed(() => [...baseRows(dataset.value), ...(importedRowsByDataset.value[dataset.value] || [])])
-  const headers = computed(() => headersFor(dataset.value, importedRowsByDataset.value[dataset.value] || []))
+  const currentPayload = computed(() => payloads.value[dataset.value] || null)
+  const rows = computed(() => [...baseRows(dataset.value, currentPayload.value), ...(importedRowsByDataset.value[dataset.value] || [])])
+  const headers = computed(() => headersFor(dataset.value, importedRowsByDataset.value[dataset.value] || [], currentPayload.value))
   const datasetConfig = computed(() => DATASETS[dataset.value])
   const visibleColumns = ref({})
+  const datasetCounts = computed(() => {
+    const output = {}
+    for (const key of Object.keys(DATASETS)) {
+      output[key] = (payloads.value[key]?.data?.length || 0) + (importedRowsByDataset.value[key]?.length || 0)
+    }
+    return output
+  })
 
   const activeColumns = computed(() => {
     const saved = visibleColumns.value[dataset.value]
@@ -93,12 +104,30 @@ export function useDatabase() {
     document.documentElement.dataset.theme = value
   }, { immediate: true })
 
+  watch(dataset, (key) => {
+    ensureDataset(key)
+  }, { immediate: true })
+
   function switchDataset(key) {
     dataset.value = key
     query.value = ''
     Object.keys(filters).forEach((field) => delete filters[field])
     sort.field = ''
     currentRow.value = null
+  }
+
+  async function ensureDataset(key) {
+    if (payloads.value[key]) return
+    loading.value = true
+    loadError.value = ''
+    try {
+      const payload = await loadDatasetPayload(key)
+      payloads.value = { ...payloads.value, [key]: payload }
+    } catch (error) {
+      loadError.value = error instanceof Error ? error.message : String(error)
+    } finally {
+      loading.value = false
+    }
   }
 
   function setSort(field) {
@@ -169,8 +198,11 @@ export function useDatabase() {
     selected,
     currentRow,
     importedPacks,
+    loading,
+    loadError,
     rows,
     headers,
+    datasetCounts,
     activeColumns,
     filterFields,
     filterOptions,

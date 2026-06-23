@@ -114,6 +114,29 @@ npm run preview
 
 构建产物输出到 `dist/`，默认不作为源码提交。
 
+## 静态部署
+
+前端可以作为纯静态站点部署，推荐优先使用 hash 路由入口：
+
+```text
+#/map
+#/lore
+#/benchmark
+#/share?type=ship&id=ship_arg_l_destroyer_01_a
+```
+
+这样部署到 GitHub Pages、Cloudflare Pages、Nginx 子目录或本地静态目录时，不需要额外配置服务端 fallback。
+
+Vite 已使用相对资源路径：
+
+```js
+base: './'
+```
+
+因此 `dist/` 可以放在站点根目录、子目录，或由公网部署机直接托管。若使用 `/map`、`/lore`、`/benchmark` 这类普通路径，需要服务器把所有前端路由回退到 `index.html`。
+
+核心数据库数据采用按需加载：首次进入首页只加载当前分类，切换“舰船 / 武器 / 炮塔 / 装备”时再加载对应 JSON。分享卡、星区地图、编年史和数值标杆页也按页面拆包加载。
+
 ## 旧版入口
 
 旧版静态页保存在：

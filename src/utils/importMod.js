@@ -1,4 +1,4 @@
-import { DATASETS } from '../dataIndex'
+import { DATASETS, loadDatasetPayload } from '../dataIndex'
 import { parseCsv } from './csv'
 
 const FIELD_ALIASES = {
@@ -60,9 +60,10 @@ export function reportForDatasets(datasets) {
   return { counts, total: Object.values(counts).reduce((a, b) => a + b, 0) }
 }
 
-export function importTemplateForDataset(dataset) {
+export async function importTemplateForDataset(dataset) {
   const config = DATASETS[dataset] || DATASETS.ships
-  const headers = [...new Set([...(config.payload.headers || []), '__source', '__source_type'])]
+  const payload = await loadDatasetPayload(config.key)
+  const headers = [...new Set([...(payload.headers || config.defaultColumns || []), '__source', '__source_type'])]
   const sample = Object.fromEntries(headers.map((field) => [field, '']))
   sample[config.nameKey] = '示例：填写你的 mod 条目名称'
   sample[config.subKey] = 'Example Mod Entry'
@@ -291,9 +292,8 @@ export function fullImportExamplePackage() {
 
 function normalizeRow(row, dataset, index) {
   const clean = {}
-  const known = new Set(DATASETS[dataset].payload.headers || [])
   for (const [rawKey, value] of Object.entries(row || {})) {
-    const key = canonicalField(rawKey, known)
+    const key = canonicalField(rawKey)
     if (key) clean[key] = value
   }
   if (!clean.__uid) {
@@ -303,10 +303,10 @@ function normalizeRow(row, dataset, index) {
   return clean
 }
 
-function canonicalField(field, known) {
+function canonicalField(field) {
   const raw = String(field || '').trim()
   if (!raw) return ''
-  if (known.has(raw) || raw.startsWith('__')) return raw
+  if (raw.startsWith('__')) return raw
   const normalized = raw.toLowerCase().replace(/[\s-]+/g, '_')
   return FIELD_ALIASES[normalized] || raw
 }
