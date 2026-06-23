@@ -35,6 +35,15 @@ defineEmits(['switch'])
       </button>
     </nav>
 
+    <a class="nav-btn nav-link" href="#/map">
+      <span class="nav-icon">图</span>
+      <span class="nav-text">
+        <b>星区地图</b>
+        <small>真实坐标星图与星区资料</small>
+      </span>
+      <span class="nav-count">MAP</span>
+    </a>
+
     <section class="side-note">
       <b>迁移范围</b>
       <p>第一阶段聚焦核心数据库。分享卡、星图、编年史和 Benchmark 已保留数据接口，后续作为独立页面迁移。</p>

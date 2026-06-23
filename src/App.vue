@@ -12,8 +12,10 @@ import ExportModal from './components/ExportModal.vue'
 import SuggestModal from './components/SuggestModal.vue'
 import { useDatabase } from './composables/useDatabase'
 import { isShareRoute } from './utils/shareRoute'
+import { isMapRoute } from './utils/mapRoute'
 
 const SharePage = defineAsyncComponent(() => import('./components/share/SharePage.vue'))
+const SectorMapPage = defineAsyncComponent(() => import('./components/map/SectorMapPage.vue'))
 const db = useDatabase()
 const compareOpen = ref(false)
 const importOpen = ref(false)
@@ -27,6 +29,10 @@ const pageRows = computed(() => db.filteredRows.value.slice(0, 600))
 const shareMode = computed(() => {
   routeVersion.value
   return isShareRoute()
+})
+const mapMode = computed(() => {
+  routeVersion.value
+  return isMapRoute()
 })
 
 function updateRoute() {
@@ -60,6 +66,7 @@ onBeforeUnmount(() => {
 
 <template>
   <SharePage v-if="shareMode" :route-version="routeVersion" />
+  <SectorMapPage v-else-if="mapMode" />
   <div v-else class="app-shell">
     <AppSidebar :datasets="db.DATASETS" :current="db.dataset.value" :stats="db.stats.value" @switch="db.switchDataset" />
 

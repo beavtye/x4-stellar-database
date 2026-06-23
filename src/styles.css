@@ -108,6 +108,8 @@ button {
   padding: 10px;
   text-align: left;
   cursor: pointer;
+  color: inherit;
+  text-decoration: none;
 }
 
 .nav-btn:hover, .nav-btn.active {
@@ -242,6 +244,437 @@ input:focus, select:focus, textarea:focus {
 
 .btn.ghost {
   background: transparent;
+}
+
+.sector-map-page {
+  min-height: 100vh;
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background:
+    radial-gradient(circle at 50% 12%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 34%),
+    var(--bg);
+}
+
+.sector-map-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(280px, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+
+.sector-map-title {
+  min-width: 0;
+}
+
+.sector-map-title span,
+.map-panel-head span {
+  color: var(--accent);
+  font: 800 11px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+
+.sector-map-title h1 {
+  margin: 3px 0 4px;
+  font-size: 21px;
+}
+
+.sector-map-title p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.sector-map-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.sector-map-search label {
+  display: grid;
+  gap: 5px;
+}
+
+.sector-map-search span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.sector-map-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.sector-map-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 340px;
+  gap: 12px;
+}
+
+.sector-list-panel,
+.sector-map-canvas-panel,
+.sector-info-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.map-panel-head {
+  min-height: 49px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.map-panel-head b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.sector-list {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  padding: 10px;
+}
+
+.sector-list-item {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: inherit;
+  padding: 9px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sector-list-item:hover,
+.sector-list-item.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel-2));
+}
+
+.sector-list-item i {
+  width: 36px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+  font: normal 800 9px ui-monospace, Consolas, monospace;
+}
+
+.sector-list-item b,
+.sector-list-item small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sector-list-item b {
+  font-size: 13px;
+}
+
+.sector-list-item small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.sector-list-item em {
+  color: var(--accent-2);
+  font: normal 800 11px ui-monospace, Consolas, monospace;
+}
+
+.sector-list-empty {
+  margin: 14px 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sector-map-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 620px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 38%),
+    linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 88%, #001018), var(--panel));
+}
+
+.sector-map-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+
+.sector-map-svg:active {
+  cursor: grabbing;
+}
+
+.sector-map-bg {
+  fill: color-mix(in srgb, var(--panel-2) 94%, #001018);
+}
+
+.sector-grid-line {
+  fill: none;
+  stroke: color-mix(in srgb, var(--accent) 14%, transparent);
+  stroke-width: 1;
+}
+
+.sector-map-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.sector-node-hit-area {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.sector-node-label-hit-area {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.sector-node-halo {
+  fill: color-mix(in srgb, var(--accent) 18%, transparent);
+  stroke: color-mix(in srgb, var(--accent) 44%, transparent);
+  stroke-width: 1.4;
+}
+
+.sector-node-core {
+  fill: var(--accent);
+  stroke: var(--panel);
+  stroke-width: 2;
+}
+
+.sector-map-node.rich .sector-node-halo {
+  stroke: color-mix(in srgb, var(--accent-2) 58%, var(--accent));
+}
+
+.sector-map-node.anomaly .sector-node-core {
+  fill: #9f7aea;
+}
+
+.sector-map-node:hover .sector-node-halo,
+.sector-map-node.active .sector-node-halo {
+  filter: url(#sectorNodeGlow);
+  stroke-width: 2.4;
+}
+
+.sector-node-selected {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-width: 2.2;
+  stroke-dasharray: 6 5;
+}
+
+.sector-map-node text {
+  pointer-events: auto;
+  cursor: pointer;
+  fill: var(--text);
+  paint-order: stroke;
+  stroke: var(--panel);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  font: 800 13px "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+}
+
+.sector-map-node .sector-node-cluster {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.sector-map-legend {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  color: var(--muted);
+  font: 700 11px ui-monospace, Consolas, monospace;
+  pointer-events: none;
+}
+
+.sector-map-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sector-map-legend i {
+  width: 9px;
+  height: 9px;
+  background: var(--accent);
+}
+
+.sector-map-legend .rich i {
+  background: var(--accent-2);
+}
+
+.sector-map-legend .anomaly i {
+  background: #9f7aea;
+}
+
+.sector-info-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.sector-info-hero {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  padding: 13px;
+}
+
+.sector-info-hero span {
+  color: var(--accent);
+  font: 800 11px ui-monospace, Consolas, monospace;
+}
+
+.sector-info-hero h2 {
+  margin: 6px 0 8px;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.sector-info-hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.sector-field-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  margin: 0;
+}
+
+.sector-field-list div {
+  display: grid;
+  grid-template-columns: minmax(76px, 0.32fr) minmax(0, 1fr);
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 7px 0;
+}
+
+.sector-field-list dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.sector-field-list dd {
+  margin: 0;
+  min-width: 0;
+  word-break: break-word;
+  font-size: 13px;
+}
+
+.sector-resource-section h3,
+.sector-tag-section h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.sector-resource-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sector-resource {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  padding: 9px;
+}
+
+.sector-resource b,
+.sector-resource small,
+.sector-resource strong {
+  display: block;
+}
+
+.sector-resource small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.sector-resource strong {
+  margin-top: 7px;
+  color: var(--accent-2);
+  font: 800 14px ui-monospace, Consolas, monospace;
+}
+
+.sector-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sector-tag-row span {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  padding: 5px 7px;
+  font: 700 11px ui-monospace, Consolas, monospace;
+}
+
+.sector-info-empty {
+  margin: auto;
+  padding: 28px 16px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.sector-info-empty strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 6px;
 }
 
 .btn:disabled {
@@ -605,6 +1038,23 @@ th.select-col {
   .filter-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .sector-map-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .sector-map-actions {
+    justify-content: flex-start;
+  }
+
+  .sector-map-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .sector-info-panel {
+    grid-column: 1 / -1;
+    max-height: 380px;
+  }
 }
 
 @media (max-width: 720px) {
@@ -640,6 +1090,41 @@ th.select-col {
 
   .table-shell, .card-grid {
     max-height: none;
+  }
+
+  .sector-map-page {
+    padding: 10px;
+  }
+
+  .sector-map-search,
+  .sector-map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sector-map-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sector-list-panel {
+    max-height: 260px;
+  }
+
+  .sector-map-canvas-wrap {
+    min-height: 480px;
+  }
+
+  .sector-info-panel {
+    max-height: none;
+  }
+
+  .sector-resource-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sector-field-list div {
+    grid-template-columns: 1fr;
+    gap: 3px;
   }
 }
 
