@@ -13,9 +13,11 @@ import SuggestModal from './components/SuggestModal.vue'
 import { useDatabase } from './composables/useDatabase'
 import { isShareRoute } from './utils/shareRoute'
 import { isMapRoute } from './utils/mapRoute'
+import { isLoreRoute } from './utils/loreRoute'
 
 const SharePage = defineAsyncComponent(() => import('./components/share/SharePage.vue'))
 const SectorMapPage = defineAsyncComponent(() => import('./components/map/SectorMapPage.vue'))
+const LorePage = defineAsyncComponent(() => import('./components/lore/LorePage.vue'))
 const db = useDatabase()
 const compareOpen = ref(false)
 const importOpen = ref(false)
@@ -33,6 +35,10 @@ const shareMode = computed(() => {
 const mapMode = computed(() => {
   routeVersion.value
   return isMapRoute()
+})
+const loreMode = computed(() => {
+  routeVersion.value
+  return isLoreRoute()
 })
 
 function updateRoute() {
@@ -67,6 +73,7 @@ onBeforeUnmount(() => {
 <template>
   <SharePage v-if="shareMode" :route-version="routeVersion" />
   <SectorMapPage v-else-if="mapMode" />
+  <LorePage v-else-if="loreMode" :route-version="routeVersion" />
   <div v-else class="app-shell">
     <AppSidebar :datasets="db.DATASETS" :current="db.dataset.value" :stats="db.stats.value" @switch="db.switchDataset" />
 
