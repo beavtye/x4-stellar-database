@@ -1,5 +1,7 @@
 # X4 星际数据库 Vue3 迁移版
 
+这是 X4: Foundations 中文玩家数据库的 Vue3 迁移版。当前仍处于迁移阶段，旧版纯 HTML 保存在 `public/legacy/`，欢迎提交数据修正、字段补全和页面迁移 PR。
+
 这是从旧版单文件 HTML/CSS/JS 迁移出的 Vue3 + Vite 工程。目标是让数据、界面、协作流程分层，方便后续放到 GitHub 多人维护。
 
 ## 当前状态
