@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppSidebar from './components/AppSidebar.vue'
 import TopBar from './components/TopBar.vue'
 import FilterBar from './components/FilterBar.vue'
@@ -11,16 +11,27 @@ import ImportModal from './components/ImportModal.vue'
 import ExportModal from './components/ExportModal.vue'
 import SuggestModal from './components/SuggestModal.vue'
 import { useDatabase } from './composables/useDatabase'
+import { isShareRoute } from './utils/shareRoute'
 
+const SharePage = defineAsyncComponent(() => import('./components/share/SharePage.vue'))
 const db = useDatabase()
 const compareOpen = ref(false)
 const importOpen = ref(false)
 const exportOpen = ref(false)
 const suggestOpen = ref(false)
 const suggestRow = ref(null)
+const routeVersion = ref(0)
 
 const selectedRows = computed(() => db.selectedRowsForCurrentDataset())
 const pageRows = computed(() => db.filteredRows.value.slice(0, 600))
+const shareMode = computed(() => {
+  routeVersion.value
+  return isShareRoute()
+})
+
+function updateRoute() {
+  routeVersion.value += 1
+}
 
 function updateFilter(field, value) {
   if (value) db.filters[field] = value
@@ -35,10 +46,21 @@ function openSuggest(row) {
   suggestRow.value = row
   suggestOpen.value = true
 }
+
+onMounted(() => {
+  window.addEventListener('popstate', updateRoute)
+  window.addEventListener('hashchange', updateRoute)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('popstate', updateRoute)
+  window.removeEventListener('hashchange', updateRoute)
+})
 </script>
 
 <template>
-  <div class="app-shell">
+  <SharePage v-if="shareMode" :route-version="routeVersion" />
+  <div v-else class="app-shell">
     <AppSidebar :datasets="db.DATASETS" :current="db.dataset.value" :stats="db.stats.value" @switch="db.switchDataset" />
 
     <main class="main">

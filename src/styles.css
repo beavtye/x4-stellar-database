@@ -642,3 +642,297 @@ th.select-col {
     max-height: none;
   }
 }
+
+.share-page {
+  min-height: 100vh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(85, 191, 224, 0.14), transparent 28%),
+    radial-gradient(circle at 84% 78%, rgba(87, 212, 140, 0.1), transparent 26%),
+    linear-gradient(135deg, #05111a 0%, #0b1622 54%, #03070d 100%);
+  color: #eef7fb;
+}
+
+.share-page-portrait {
+  padding: 16px;
+}
+
+.share-card {
+  width: 1200px;
+  height: 675px;
+  max-width: calc(100vw - 44px);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(133, 181, 207, 0.42);
+  background:
+    radial-gradient(circle at 82% 10%, rgba(95, 225, 255, 0.15), transparent 28%),
+    radial-gradient(circle at 12% 88%, rgba(117, 224, 162, 0.12), transparent 24%),
+    linear-gradient(135deg, #07121d 0%, #0b1724 52%, #050a12 100%);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
+  isolation: isolate;
+}
+
+.share-card-portrait {
+  width: 900px;
+  height: 1400px;
+  max-height: calc(100vh - 64px);
+}
+
+.share-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.share-card::after {
+  content: "X4 STELLAR DATABASE";
+  position: absolute;
+  right: 28px;
+  bottom: 20px;
+  color: rgba(151, 178, 194, 0.2);
+  font: 800 18px ui-monospace, Consolas, monospace;
+  letter-spacing: 0;
+}
+
+.share-card.missing {
+  background:
+    radial-gradient(circle at 82% 10%, rgba(255, 107, 124, 0.14), transparent 28%),
+    linear-gradient(135deg, #13090e 0%, #151822 56%, #050a12 100%);
+}
+
+.share-scanline {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.18));
+  pointer-events: none;
+  z-index: 0;
+}
+
+.share-card-inner {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding: 42px 48px 34px;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto auto;
+  gap: 20px;
+  min-width: 0;
+}
+
+.share-card-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 20px;
+  align-items: start;
+}
+
+.share-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #5fe1ff;
+  font: 800 14px ui-monospace, Consolas, monospace;
+}
+
+.share-kicker::before {
+  content: "";
+  width: 42px;
+  height: 2px;
+  background: #5fe1ff;
+  box-shadow: 0 0 18px rgba(95, 225, 255, 0.72);
+}
+
+.share-card h1 {
+  margin: 14px 0 7px;
+  color: #f7fbff;
+  font-size: 54px;
+  line-height: 1.08;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.share-card-head p {
+  margin: 0;
+  color: #aec4d1;
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.share-mark {
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(95, 225, 255, 0.45);
+  background: rgba(5, 13, 20, 0.58);
+  color: #5fe1ff;
+  font: 900 30px ui-monospace, Consolas, monospace;
+  box-shadow: inset 0 0 28px rgba(95, 225, 255, 0.08);
+}
+
+.share-summary {
+  margin: 0;
+  max-width: 980px;
+  color: #d7e6ee;
+  font-size: 21px;
+  line-height: 1.56;
+}
+
+.share-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  align-self: start;
+}
+
+.share-field {
+  min-width: 0;
+  min-height: 92px;
+  border: 1px solid rgba(133, 181, 207, 0.28);
+  background: rgba(8, 19, 29, 0.72);
+  padding: 13px 14px;
+}
+
+.share-field dt {
+  color: #88a7b8;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.share-field dd {
+  margin: 0;
+  color: #f2f8fb;
+  font-size: 23px;
+  line-height: 1.22;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.share-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.share-tags span {
+  border: 1px solid rgba(95, 225, 255, 0.34);
+  background: rgba(95, 225, 255, 0.08);
+  color: #bdefff;
+  padding: 7px 10px;
+  font-size: 15px;
+}
+
+.share-footer {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  color: #88a7b8;
+  font-size: 14px;
+  min-width: 0;
+}
+
+.share-footer code {
+  justify-self: end;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #5fe1ff;
+  font: 700 13px ui-monospace, Consolas, monospace;
+}
+
+.share-ready-hint {
+  margin: 0;
+  width: 1200px;
+  max-width: calc(100vw - 44px);
+  color: rgba(174, 196, 209, 0.78);
+  font: 12px ui-monospace, Consolas, monospace;
+}
+
+.share-ready-hint code {
+  color: #5fe1ff;
+}
+
+.share-card-portrait .share-card-inner {
+  padding: 54px 56px 44px;
+  gap: 28px;
+}
+
+.share-card-portrait .share-card-head {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.share-card-portrait .share-mark {
+  width: 78px;
+  height: 78px;
+  grid-row: 1;
+}
+
+.share-card-portrait h1 {
+  font-size: 58px;
+}
+
+.share-card-portrait .share-summary {
+  font-size: 25px;
+}
+
+.share-card-portrait .share-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.share-card-portrait .share-field {
+  min-height: 132px;
+  padding: 18px;
+}
+
+.share-card-portrait .share-field dd {
+  font-size: 28px;
+}
+
+.share-card-portrait .share-footer {
+  grid-template-columns: 1fr;
+  align-items: start;
+  font-size: 18px;
+}
+
+.share-card-portrait .share-footer code {
+  justify-self: start;
+  font-size: 15px;
+}
+
+@media (max-width: 900px) {
+  .share-page {
+    place-items: start center;
+    padding: 10px;
+  }
+
+  .share-card {
+    transform-origin: top center;
+    transform: scale(min(1, calc((100vw - 20px) / 1200)));
+    max-width: none;
+  }
+
+  .share-card-portrait {
+    transform: scale(min(1, calc((100vw - 20px) / 900)));
+    max-height: none;
+  }
+
+  .share-ready-hint {
+    width: calc(100vw - 20px);
+  }
+}
