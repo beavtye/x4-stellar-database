@@ -29,6 +29,7 @@ const submit = reactive({
 const report = computed(() => parsed.value ? reportForDatasets(parsed.value) : reportForDatasets(props.pendingDatasets))
 const hasPending = computed(() => report.value.total > 0)
 const currentDatasetLabel = computed(() => DATASETS[props.dataset]?.label || '当前分类')
+const submitSourceLabel = computed(() => parsed.value ? '刚选择的文件' : '当前本地导入')
 
 async function readFile(event) {
   const file = event.target.files?.[0]
@@ -39,8 +40,9 @@ async function readFile(event) {
   try {
     const text = await file.text()
     parsed.value = parseImportPayload(text, file.name)
+    if (!submit.packageName) submit.packageName = file.name.replace(/\.(csv|json)$/i, '')
     const r = reportForDatasets(parsed.value)
-    status.value = `已识别 ${r.total} 行：${Object.entries(r.counts).map(([k, v]) => `${k} ${v}`).join('、')}`
+    status.value = `已识别 ${r.total} 行：${Object.entries(r.counts).map(([k, v]) => `${k} ${v}`).join('、')}。可以直接提交审核，也可以先合并到本地视图检查。`
   } catch (err) {
     parsed.value = null
     status.value = `导入失败：${err.message}`
@@ -61,16 +63,16 @@ function confirmImport() {
 }
 
 async function submitForReview() {
-  const datasets = props.pendingDatasets
+  const datasets = parsed.value || props.pendingDatasets
   const r = reportForDatasets(datasets)
   if (!r.total) {
-    status.value = '没有可提交的数据包。'
+    status.value = '没有可提交的数据包。请先选择 CSV / JSON 文件，或先导入本地数据。'
     return
   }
-  status.value = '正在提交到审核服务...'
+  status.value = `正在提交${submitSourceLabel.value}到审核服务...`
   try {
     const data = await postModPackage({
-      package_name: submit.packageName || '未命名 mod 数据包',
+      package_name: submit.packageName || fileName.value || '未命名 mod 数据包',
       author_name: submit.authorName,
       contact: submit.contact,
       mod_id: submit.modId,
@@ -83,7 +85,8 @@ async function submitForReview() {
     localStorage.setItem('x4_mod_submit_author_key', data.author_key || '')
     submit.modId = data.mod_id || ''
     submit.authorKey = data.author_key || ''
-    status.value = `已提交，审核编号 #${data.id}。请在私下保存 mod_id 和作者更新密钥。`
+    parsed.value = null
+    status.value = `已提交，审核编号 #${data.id}。请在私下保存 mod_id 和作者更新密钥，后续更新自己的数据包需要用到。`
   } catch (err) {
     status.value = `提交失败：${err.message}`
   }
@@ -129,20 +132,30 @@ async function downloadCurrentTemplate() {
       <button type="button" class="icon-toggle" @click="$emit('close')">×</button>
     </header>
     <div class="modal-body import-body">
-      <section class="import-block">
-        <h4>1. 本地导入</h4>
-        <p>支持 CSV、JSON 数组，或包含 datasets 的 JSON 包。完整示例包包含舰船、武器、炮塔、装备和弹体/子弹参数示范。</p>
+      <section class="import-block import-fast">
+        <h4>最快上传</h4>
+        <p>下载模板，填好后选择 CSV / JSON 文件，再点“一键提交审核”。不需要先合并到本地视图。</p>
         <div class="button-row">
           <button type="button" class="btn" @click="downloadExamplePackage">下载完整示例包</button>
           <button type="button" class="btn" @click="downloadCurrentTemplate">下载当前分类模板</button>
         </div>
         <input type="file" accept=".csv,.json,text/csv,application/json" @change="readFile" />
+        <div class="quick-submit-row">
+          <span>{{ report.total ? `${submitSourceLabel}：${report.total} 行` : '等待选择文件' }}</span>
+          <button type="button" class="btn primary" :disabled="!hasPending" @click="submitForReview">一键提交审核</button>
+        </div>
+      </section>
+
+      <section class="import-block">
+        <h4>本地预览</h4>
+        <p>想先在网页里检查数据时，再合并到本地视图。这里不会提交到站长后台。</p>
         <button type="button" class="btn primary" :disabled="!parsed" @click="confirmImport">合并到本地视图</button>
         <button type="button" class="btn" @click="syncPublicPackages">从审核服务同步公开 mod</button>
       </section>
 
       <section class="import-block">
-        <h4>2. 提交审核</h4>
+        <h4>提交信息</h4>
+        <p>首次提交可以不填 mod_id 和作者更新密钥；提交成功后网页会返回这两个值。以后更新同一个数据包时再填回来。</p>
         <div class="form-grid">
           <label><span>数据包名</span><input v-model="submit.packageName" placeholder="例如 VRO balance patch" /></label>
           <label><span>作者名</span><input v-model="submit.authorName" /></label>
@@ -153,7 +166,7 @@ async function downloadCurrentTemplate() {
         </div>
         <div class="modal-actions">
           <button type="button" class="btn" @click="$emit('clear-imports')">清空本地导入</button>
-          <button type="button" class="btn primary" :disabled="!hasPending" @click="submitForReview">提交 mod 包审核</button>
+          <button type="button" class="btn primary" :disabled="!hasPending" @click="submitForReview">提交{{ submitSourceLabel }}审核</button>
         </div>
       </section>
 

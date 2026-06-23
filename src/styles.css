@@ -1832,6 +1832,13 @@ th.select-col {
   padding: 12px;
 }
 
+.import-fast {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--panel-2)), var(--panel-2) 58%),
+    var(--panel-2);
+}
+
 .import-block h4 {
   margin: 0 0 8px;
 }
@@ -1839,6 +1846,20 @@ th.select-col {
 .import-block p, .import-status p {
   margin: 0 0 10px;
   color: var(--muted);
+}
+
+.quick-submit-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.quick-submit-row span {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .form-grid {
