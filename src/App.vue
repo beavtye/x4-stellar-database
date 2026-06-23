@@ -68,6 +68,7 @@ function openSuggest(row) {
 onMounted(() => {
   window.addEventListener('popstate', updateRoute)
   window.addEventListener('hashchange', updateRoute)
+  db.syncPublicModPackages({ silent: true })
 })
 
 onBeforeUnmount(() => {
@@ -105,7 +106,18 @@ onBeforeUnmount(() => {
         @open-compare="compareOpen = true"
       />
 
-      <FilterBar :fields="db.filterFields.value" :options="db.filterOptions.value" :filters="db.filters" @update-filter="updateFilter" @reset="resetFilters" />
+      <FilterBar
+        :fields="db.filterFields.value"
+        :options="db.filterOptions.value"
+        :filters="db.filters"
+        :source-mode="db.sourceMode.value"
+        :source-options="db.sourceOptions.value"
+        :selected-source-ids="db.selectedSourceIds.value"
+        @update-filter="updateFilter"
+        @reset="resetFilters"
+        @update-source-mode="db.setSourceMode"
+        @toggle-source="db.toggleSourceId"
+      />
 
       <section class="toolbar">
         <div>
@@ -114,7 +126,10 @@ onBeforeUnmount(() => {
         </div>
         <p v-if="db.loading.value">正在加载 {{ db.datasetConfig.value.label }} 数据...</p>
         <p v-else-if="db.loadError.value">数据加载失败：{{ db.loadError.value }}</p>
-        <p v-else>为保证大数据量性能，当前视图显示前 {{ pageRows.length }} 条；搜索和导出仍基于完整筛选结果。</p>
+        <p v-else>
+          为保证大数据量性能，当前视图显示前 {{ pageRows.length }} 条；搜索和导出仍基于完整筛选结果。
+          <span v-if="db.publicSync.message">{{ db.publicSync.message }}</span>
+        </p>
       </section>
 
       <DataTable
@@ -170,6 +185,7 @@ onBeforeUnmount(() => {
       :imported-packs="db.importedPacks.value"
       @close="importOpen = false"
       @import-pack="db.addImportedPack"
+      @replace-public-packs="db.replacePublicPacks"
       @clear-imports="db.clearImportedPacks"
     />
 

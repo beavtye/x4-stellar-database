@@ -157,6 +157,8 @@ public/legacy/index.html
 - `POST /api/mod-packages`
 - `GET /api/mod-packages`
 
+数据库页面会在启动时尝试读取已批准并启用的公开 mod 包；读取成功后，用户可以在“数据来源”里切换“原版 / 全部 / 指定 mod”。如果当前部署没有审核服务，前端会继续使用内置原版静态数据。
+
 ## 重新抽取旧数据
 
 旧版静态页更新后，可重新生成 JSON：

@@ -4,6 +4,7 @@ import { DATASETS } from '../dataIndex'
 import { fullImportExamplePackage, importTemplateForDataset, parseImportPayload, reportForDatasets } from '../utils/importMod'
 import { downloadText, toCsv } from '../utils/csv'
 import { fetchPublicModPackages, postModPackage } from '../utils/reviewApi'
+import { publicModItemToPack } from '../utils/modPackages'
 
 const props = defineProps({
   open: { type: Boolean, required: true },
@@ -11,7 +12,7 @@ const props = defineProps({
   importedPacks: { type: Array, required: true },
   dataset: { type: String, default: 'ships' }
 })
-const emit = defineEmits(['close', 'import-pack', 'clear-imports'])
+const emit = defineEmits(['close', 'import-pack', 'replace-public-packs', 'clear-imports'])
 
 const status = ref('')
 const parsed = ref(null)
@@ -94,23 +95,12 @@ async function syncPublicPackages() {
     const data = await fetchPublicModPackages()
     const items = Array.isArray(data.items) ? data.items : []
     if (!items.length) {
+      emit('replace-public-packs', [])
       status.value = '当前没有已公开启用的 mod 包。'
       return
     }
-    const datasets = {}
-    for (const item of items) {
-      for (const [dataset, rows] of Object.entries(item.datasets || {})) {
-        datasets[dataset] ||= []
-        datasets[dataset].push(...rows)
-      }
-    }
-    emit('import-pack', {
-      id: `public_${Date.now()}`,
-      packageName: '审核服务公开 mod 数据',
-      createdAt: new Date().toISOString(),
-      datasets
-    })
-    status.value = `已同步 ${items.length} 个公开 mod 包。`
+    emit('replace-public-packs', items.map(publicModItemToPack))
+    status.value = `已同步 ${items.length} 个公开 mod 包，可在“数据来源”里单独筛选。`
   } catch (err) {
     status.value = `同步失败：${err.message}`
   }

@@ -1,9 +1,13 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { DATASETS, SOURCE_FIELD, SOURCE_TYPE_FIELD, VANILLA_SOURCE, baseRows, headersFor, loadDatasetPayload, rowIdentity } from '../dataIndex'
 import { asNumber, compactText, isMissing, optionText } from '../utils/format'
+import { fetchPublicModPackages } from '../utils/reviewApi'
+import { PUBLIC_PACK_SOURCE, VANILLA_SOURCE_ID, normalizeImportedPack, packSourceLabel, packStableKey, publicModItemToPack } from '../utils/modPackages'
 
 const IMPORT_KEY = 'x4_vue_imported_mod_packs'
 const THEME_KEY = 'x4_dashboard_theme_mode'
+const SOURCE_MODE_KEY = 'x4_vue_source_mode'
+const SOURCE_IDS_KEY = 'x4_vue_source_ids'
 
 export function useDatabase() {
   const dataset = ref('ships')
@@ -15,6 +19,9 @@ export function useDatabase() {
   const selected = reactive(new Set())
   const currentRow = ref(null)
   const importedPacks = ref(loadImportedPacks())
+  const sourceMode = ref(localStorage.getItem(SOURCE_MODE_KEY) || 'vanilla')
+  const selectedSourceIds = ref(loadSelectedSourceIds())
+  const publicSync = reactive({ state: 'idle', message: '' })
   const payloads = ref({})
   const loading = ref(false)
   const loadError = ref('')
@@ -28,6 +35,8 @@ export function useDatabase() {
           ...row,
           __import_pack_id: pack.id,
           __import_pack_name: pack.packageName,
+          __import_mod_id: pack.modId || '',
+          __import_pack_source: pack.source || 'local',
           __index: row.__index ?? (payloads.value[key]?.data?.length || 0) + index,
           [SOURCE_FIELD]: pack.packageName,
           [SOURCE_TYPE_FIELD]: 'mod'
@@ -38,16 +47,33 @@ export function useDatabase() {
   })
 
   const currentPayload = computed(() => payloads.value[dataset.value] || null)
-  const rows = computed(() => [...baseRows(dataset.value, currentPayload.value), ...(importedRowsByDataset.value[dataset.value] || [])])
+  const allRows = computed(() => [...baseRows(dataset.value, currentPayload.value), ...(importedRowsByDataset.value[dataset.value] || [])])
+  const rows = computed(() => filterRowsBySource(allRows.value))
   const headers = computed(() => headersFor(dataset.value, importedRowsByDataset.value[dataset.value] || [], currentPayload.value))
   const datasetConfig = computed(() => DATASETS[dataset.value])
   const visibleColumns = ref({})
   const datasetCounts = computed(() => {
     const output = {}
     for (const key of Object.keys(DATASETS)) {
-      output[key] = (payloads.value[key]?.data?.length || 0) + (importedRowsByDataset.value[key]?.length || 0)
+      const base = baseRows(key, payloads.value[key])
+      const imported = importedRowsByDataset.value[key] || []
+      output[key] = filterRowsBySource([...base, ...imported]).length
     }
     return output
+  })
+
+  const sourceOptions = computed(() => {
+    const currentBaseCount = baseRows(dataset.value, currentPayload.value).length
+    return [
+      { id: VANILLA_SOURCE_ID, label: VANILLA_SOURCE, kind: 'vanilla', count: currentBaseCount },
+      ...importedPacks.value.map((pack) => ({
+        id: pack.id,
+        label: packSourceLabel(pack),
+        shortLabel: pack.packageName,
+        kind: pack.source || 'local',
+        count: Array.isArray(pack.datasets?.[dataset.value]) ? pack.datasets[dataset.value].length : 0
+      }))
+    ]
   })
 
   const activeColumns = computed(() => {
@@ -57,7 +83,7 @@ export function useDatabase() {
   })
 
   const filterFields = computed(() => {
-    const preferred = ['种族', '势力', '制造种族', '尺寸', '船级/类型', '主要用途', '武器类型', '炮塔类型', '装备类型', 'Mk', SOURCE_FIELD]
+    const preferred = ['种族', '势力', '制造种族', '尺寸', '船级/类型', '主要用途', '武器类型', '炮塔类型', '装备类型', 'Mk']
     return preferred.filter((field) => headers.value.includes(field))
   })
 
@@ -90,12 +116,13 @@ export function useDatabase() {
   })
 
   const stats = computed(() => {
-    const importedCount = rows.value.filter((row) => row[SOURCE_TYPE_FIELD] === 'mod').length
+    const importedCount = allRows.value.filter((row) => row[SOURCE_TYPE_FIELD] === 'mod').length
     return {
       total: rows.value.length,
       filtered: filteredRows.value.length,
       selected: selected.size,
-      imported: importedCount
+      imported: importedCount,
+      sources: sourceOptions.value.length
     }
   })
 
@@ -107,6 +134,20 @@ export function useDatabase() {
   watch(dataset, (key) => {
     ensureDataset(key)
   }, { immediate: true })
+
+  watch(sourceMode, (value) => {
+    localStorage.setItem(SOURCE_MODE_KEY, value)
+  }, { immediate: true })
+
+  watch(selectedSourceIds, (value) => {
+    localStorage.setItem(SOURCE_IDS_KEY, JSON.stringify([...value]))
+  }, { deep: true })
+
+  watch(importedPacks, () => {
+    const validIds = new Set(importedPacks.value.map((pack) => pack.id))
+    const kept = [...selectedSourceIds.value].filter((id) => validIds.has(id))
+    if (kept.length !== selectedSourceIds.value.size) selectedSourceIds.value = new Set(kept)
+  }, { deep: true })
 
   function switchDataset(key) {
     dataset.value = key
@@ -139,7 +180,8 @@ export function useDatabase() {
   }
 
   function rowKey(row, key = dataset.value) {
-    return `${key}:${rowIdentity(key, row)}`
+    const source = row[SOURCE_TYPE_FIELD] === 'mod' ? row.__import_pack_id || row[SOURCE_FIELD] || 'mod' : VANILLA_SOURCE_ID
+    return `${key}:${source}:${rowIdentity(key, row)}`
   }
 
   function toggleSelected(row) {
@@ -164,7 +206,18 @@ export function useDatabase() {
   }
 
   function addImportedPack(pack) {
-    importedPacks.value = [pack, ...importedPacks.value]
+    const normalized = normalizeImportedPack(pack)
+    const stableKey = packStableKey(normalized)
+    importedPacks.value = [normalized, ...importedPacks.value.filter((item) => packStableKey(item) !== stableKey && item.id !== normalized.id)]
+    saveImportedPacks(importedPacks.value)
+  }
+
+  function replacePublicPacks(packs) {
+    const normalized = packs.map(normalizeImportedPack)
+    importedPacks.value = [
+      ...normalized,
+      ...importedPacks.value.filter((item) => item.source !== PUBLIC_PACK_SOURCE)
+    ]
     saveImportedPacks(importedPacks.value)
   }
 
@@ -184,6 +237,44 @@ export function useDatabase() {
     return output
   }
 
+  function setSourceMode(mode) {
+    sourceMode.value = mode
+  }
+
+  function toggleSourceId(id) {
+    const next = new Set(selectedSourceIds.value)
+    next.has(id) ? next.delete(id) : next.add(id)
+    selectedSourceIds.value = next
+    if (next.size) sourceMode.value = 'custom'
+  }
+
+  async function syncPublicModPackages({ silent = false } = {}) {
+    if (!silent) publicSync.message = '正在同步公开 mod 数据...'
+    publicSync.state = 'loading'
+    try {
+      const data = await fetchPublicModPackages()
+      const items = Array.isArray(data.items) ? data.items : []
+      const packs = items.map(publicModItemToPack).filter((pack) => Object.keys(pack.datasets || {}).length)
+      replacePublicPacks(packs)
+      publicSync.state = 'ok'
+      publicSync.message = packs.length ? `已同步 ${packs.length} 个公开 mod 包。` : '当前没有已公开启用的 mod 包。'
+      return packs
+    } catch (error) {
+      publicSync.state = 'error'
+      publicSync.message = silent ? '' : `同步失败：${error instanceof Error ? error.message : String(error)}`
+      return []
+    }
+  }
+
+  function filterRowsBySource(list) {
+    if (sourceMode.value === 'all') return list
+    if (sourceMode.value === 'custom') {
+      const ids = selectedSourceIds.value
+      return list.filter((row) => row[SOURCE_TYPE_FIELD] === 'mod' && ids.has(row.__import_pack_id))
+    }
+    return list.filter((row) => row[SOURCE_TYPE_FIELD] !== 'mod')
+  }
+
   return {
     DATASETS,
     SOURCE_FIELD,
@@ -198,8 +289,13 @@ export function useDatabase() {
     selected,
     currentRow,
     importedPacks,
+    sourceMode,
+    selectedSourceIds,
+    sourceOptions,
+    publicSync,
     loading,
     loadError,
+    allRows,
     rows,
     headers,
     datasetCounts,
@@ -217,8 +313,12 @@ export function useDatabase() {
     selectedRowsForCurrentDataset,
     setColumns,
     addImportedPack,
+    replacePublicPacks,
     clearImportedPacks,
-    mergedImportedDatasets
+    mergedImportedDatasets,
+    setSourceMode,
+    toggleSourceId,
+    syncPublicModPackages
   }
 }
 
@@ -235,7 +335,7 @@ function compareValues(a, b) {
 function loadImportedPacks() {
   try {
     const data = JSON.parse(localStorage.getItem(IMPORT_KEY) || '[]')
-    return Array.isArray(data) ? data : []
+    return Array.isArray(data) ? data.map(normalizeImportedPack) : []
   } catch {
     return []
   }
@@ -243,4 +343,13 @@ function loadImportedPacks() {
 
 function saveImportedPacks(packs) {
   localStorage.setItem(IMPORT_KEY, JSON.stringify(packs))
+}
+
+function loadSelectedSourceIds() {
+  try {
+    const data = JSON.parse(localStorage.getItem(SOURCE_IDS_KEY) || '[]')
+    return new Set(Array.isArray(data) ? data : [])
+  } catch {
+    return new Set()
+  }
 }
