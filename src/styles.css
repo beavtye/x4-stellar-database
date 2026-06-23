@@ -1862,6 +1862,47 @@ th.select-col {
   font-size: 12px;
 }
 
+.raw-link-list {
+  display: grid;
+  gap: 10px;
+}
+
+.raw-link-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 10px;
+}
+
+.raw-link-card label {
+  display: grid;
+  gap: 5px;
+}
+
+.raw-link-card .wide {
+  grid-column: 1 / -1;
+}
+
+.raw-link-card button {
+  justify-self: start;
+}
+
+.file-btn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.file-btn input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
