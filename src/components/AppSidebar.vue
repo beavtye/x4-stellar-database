@@ -53,9 +53,18 @@ defineEmits(['switch'])
       <span class="nav-count">LORE</span>
     </a>
 
+    <a class="nav-btn nav-link" href="#/benchmark">
+      <span class="nav-icon">标</span>
+      <span class="nav-text">
+        <b>数值标杆</b>
+        <small>mod 作者曲线对比工具</small>
+      </span>
+      <span class="nav-count">BM</span>
+    </a>
+
     <section class="side-note">
       <b>迁移范围</b>
-      <p>第一阶段聚焦核心数据库。分享卡、星图、编年史和 Benchmark 已保留数据接口，后续作为独立页面迁移。</p>
+      <p>核心数据库、分享卡、星图、编年史和数值标杆页已分阶段迁移；旧版仍可作为对照。</p>
       <a href="/legacy/index.html" target="_blank" rel="noopener">打开 legacy 对照页</a>
     </section>
   </aside>

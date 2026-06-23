@@ -14,10 +14,12 @@ import { useDatabase } from './composables/useDatabase'
 import { isShareRoute } from './utils/shareRoute'
 import { isMapRoute } from './utils/mapRoute'
 import { isLoreRoute } from './utils/loreRoute'
+import { isBenchmarkRoute } from './utils/benchmarkRoute'
 
 const SharePage = defineAsyncComponent(() => import('./components/share/SharePage.vue'))
 const SectorMapPage = defineAsyncComponent(() => import('./components/map/SectorMapPage.vue'))
 const LorePage = defineAsyncComponent(() => import('./components/lore/LorePage.vue'))
+const BenchmarkPage = defineAsyncComponent(() => import('./components/benchmark/BenchmarkPage.vue'))
 const db = useDatabase()
 const compareOpen = ref(false)
 const importOpen = ref(false)
@@ -39,6 +41,10 @@ const mapMode = computed(() => {
 const loreMode = computed(() => {
   routeVersion.value
   return isLoreRoute()
+})
+const benchmarkMode = computed(() => {
+  routeVersion.value
+  return isBenchmarkRoute()
 })
 
 function updateRoute() {
@@ -74,6 +80,7 @@ onBeforeUnmount(() => {
   <SharePage v-if="shareMode" :route-version="routeVersion" />
   <SectorMapPage v-else-if="mapMode" />
   <LorePage v-else-if="loreMode" :route-version="routeVersion" />
+  <BenchmarkPage v-else-if="benchmarkMode" />
   <div v-else class="app-shell">
     <AppSidebar :datasets="db.DATASETS" :current="db.dataset.value" :stats="db.stats.value" @switch="db.switchDataset" />
 

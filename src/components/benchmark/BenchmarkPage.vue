@@ -1,0 +1,402 @@
+<script setup>
+import { computed, reactive, ref, watch } from 'vue'
+import {
+  averageMetrics,
+  benchmarkTypes,
+  chartConfig,
+  comparableRows,
+  compareValue,
+  createDraftFromRow,
+  defaultSelectedIds,
+  exportXmlSnippet,
+  getBenchmarkType,
+  materialRecommendation,
+  metricRows,
+  metricsFromDraft,
+  rowsForType
+} from '../../utils/benchmarkData'
+import { formatValue } from '../../utils/format'
+
+const typeKey = ref('weapon_m')
+const query = ref('')
+const selectedIds = ref(new Set())
+const activeId = ref('')
+const draft = reactive({})
+const copied = ref(false)
+
+const type = computed(() => getBenchmarkType(typeKey.value))
+const rows = computed(() => rowsForType(typeKey.value))
+const filteredRows = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  if (!q) return rows.value
+  return rows.value.filter((row) => {
+    return [row.name, row.subtitle, row.row['武器系统'], row.row['炮塔类型'], row.row['船级/类型'], row.row['类型']]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(q)
+  })
+})
+const visibleRows = computed(() => filteredRows.value.slice(0, 80))
+const selectedRows = computed(() => rows.value.filter((row) => selectedIds.value.has(row.id)))
+const activeTemplate = computed(() => rows.value.find((row) => row.id === activeId.value) || selectedRows.value[0] || rows.value[0] || null)
+const customMetrics = computed(() => metricsFromDraft(draft, typeKey.value))
+const chart = computed(() => chartConfig(typeKey.value))
+const chartRows = computed(() => comparableRows(rows.value, activeTemplate.value, customMetrics.value))
+const metrics = computed(() => metricRows(typeKey.value))
+const avg = computed(() => averageMetrics(selectedRows.value.length ? selectedRows.value : chartRows.value, metrics.value.map(([key]) => key)))
+const material = computed(() => materialRecommendation(selectedRows.value, activeTemplate.value, draft.productionMode))
+const xmlSnippet = computed(() => exportXmlSnippet(typeKey.value, draft, customMetrics.value))
+const chartGeometry = computed(() => buildChartGeometry(chartRows.value, selectedRows.value, customMetrics.value, chart.value))
+
+watch(typeKey, () => resetForType(), { immediate: true })
+watch(rows, () => resetForType())
+
+function resetForType() {
+  const ids = new Set(defaultSelectedIds(rows.value))
+  selectedIds.value = ids
+  activeId.value = [...ids][0] || rows.value[0]?.id || ''
+  resetDraft()
+  query.value = ''
+}
+
+function resetDraft(row = activeTemplate.value) {
+  const next = createDraftFromRow(row, typeKey.value)
+  Object.keys(draft).forEach((key) => delete draft[key])
+  Object.assign(draft, next)
+}
+
+function setActive(row) {
+  activeId.value = row.id
+  if (!selectedIds.value.has(row.id)) toggleSelected(row)
+  resetDraft(row)
+}
+
+function toggleSelected(row) {
+  const next = new Set(selectedIds.value)
+  next.has(row.id) ? next.delete(row.id) : next.add(row.id)
+  selectedIds.value = next
+}
+
+function selectVisible() {
+  const next = new Set(selectedIds.value)
+  visibleRows.value.slice(0, 24).forEach((row) => next.add(row.id))
+  selectedIds.value = next
+}
+
+function clearSelected() {
+  selectedIds.value = new Set()
+}
+
+function setDraftNumber(key, event) {
+  const n = Number(event.target.value)
+  draft[key] = Number.isFinite(n) ? Math.max(0, n) : 0
+}
+
+function setProductionMode(mode) {
+  draft.productionMode = mode
+}
+
+async function copyXml() {
+  copied.value = false
+  await navigator.clipboard?.writeText(xmlSnippet.value)
+  copied.value = true
+  window.setTimeout(() => { copied.value = false }, 1400)
+}
+
+function diffClass(key, diff) {
+  if (diff === null) return ''
+  const lowerIsGood = key === 'price' || key === 'delay' || key === 'travelCharge' || key === 'boostRecharge'
+  if (Math.abs(diff) < 1) return 'even'
+  return lowerIsGood ? (diff < 0 ? 'good' : 'bad') : (diff > 0 ? 'good' : 'bad')
+}
+
+function diffText(key, diff) {
+  if (diff === null) return '缺少标杆'
+  const label = key === 'price' ? (diff >= 0 ? '更贵' : '更省') : (diff >= 0 ? '高于标杆' : '低于标杆')
+  return `${label} ${Math.abs(diff).toFixed(1)}%`
+}
+
+function fieldValue(value, field = '') {
+  return formatValue(value, field)
+}
+
+function buildChartGeometry(baseRows, selected, custom, config) {
+  const width = 860
+  const height = 340
+  const pad = { left: 76, right: 28, top: 22, bottom: 54 }
+  const all = [
+    ...baseRows.map((row) => ({ id: row.id, name: row.name, x: row.metrics[config.xKey], y: row.metrics[config.yKey], selected: selected.some((item) => item.id === row.id) })),
+    { id: 'custom', name: draft.name || '我的设计', x: custom[config.xKey], y: custom[config.yKey], custom: true }
+  ].filter((point) => point.x !== null && point.y !== null && Number.isFinite(point.x) && Number.isFinite(point.y))
+  const xRawMax = Math.max(...all.map((point) => point.x), 1)
+  const yRawMax = Math.max(...all.map((point) => point.y), 1)
+  const xMax = robustMax(all.map((point) => point.x), xRawMax)
+  const yMax = robustMax(all.map((point) => point.y), yRawMax)
+  const xScale = (x) => pad.left + (Math.min(x, xMax) / xMax) * (width - pad.left - pad.right)
+  const yScale = (y) => height - pad.bottom - (Math.min(y, yMax) / yMax) * (height - pad.top - pad.bottom)
+  const points = all.map((point) => ({
+    ...point,
+    cx: xScale(point.x),
+    cy: yScale(point.y)
+  }))
+  const buckets = Array.from({ length: 8 }, (_, index) => {
+    const min = (xMax / 8) * index
+    const max = (xMax / 8) * (index + 1)
+    const items = baseRows.filter((row) => {
+      const x = row.metrics[config.xKey]
+      const y = row.metrics[config.yKey]
+      return x !== null && y !== null && x >= min && x <= max
+    })
+    if (!items.length) return null
+    const strongest = items.reduce((best, row) => row.metrics[config.yKey] > best.metrics[config.yKey] ? row : best, items[0])
+    return `${xScale(strongest.metrics[config.xKey]).toFixed(1)},${yScale(strongest.metrics[config.yKey]).toFixed(1)}`
+  }).filter(Boolean).join(' ')
+  return {
+    width,
+    height,
+    points,
+    envelope: buckets,
+    xMax,
+    yMax,
+    xAxis: yScale(0),
+    yAxis: xScale(0)
+  }
+}
+
+function robustMax(values, fallback) {
+  const sorted = values.filter((value) => Number.isFinite(value) && value > 0).sort((a, b) => a - b)
+  if (!sorted.length) return fallback
+  const max = sorted[sorted.length - 1]
+  const distinct = [...new Set(sorted.map((value) => Math.round(value * 1000) / 1000))]
+  const secondDistinct = distinct.length > 1 ? distinct[distinct.length - 2] : max
+  if (secondDistinct > 0 && max > secondDistinct * 4) return secondDistinct
+  const p75 = sorted[Math.max(0, Math.floor(sorted.length * 0.75) - 1)]
+  return max > p75 * 4 ? p75 : max
+}
+</script>
+
+<template>
+  <main class="benchmark-page">
+    <header class="benchmark-topbar">
+      <div>
+        <span>MOD BENCHMARK</span>
+        <h1>数值标杆工具</h1>
+        <p>先选原版同类对象，再填写你的 mod 设计；曲线、百分比和材料建议会实时更新。</p>
+      </div>
+      <nav class="benchmark-links" aria-label="页面入口">
+        <a class="btn ghost" href="./">数据库</a>
+        <a class="btn ghost" href="#/map">星区地图</a>
+        <a class="btn ghost" href="#/lore">编年史</a>
+      </nav>
+    </header>
+
+    <section class="benchmark-chart-card">
+      <div class="benchmark-chart-head">
+        <div>
+          <span>{{ type.group }} / {{ type.label }}</span>
+          <h2>曲线对比</h2>
+          <p>{{ chart.xLabel }} × {{ chart.yLabel }}。细点是同梯度原版对象，亮点是勾选标杆，金点是你的设计。</p>
+        </div>
+        <div class="benchmark-kpis">
+          <div>
+            <small>你的强度</small>
+            <b>{{ fieldValue(customMetrics.power, 'DPS') }}</b>
+          </div>
+          <div>
+            <small>勾选标杆</small>
+            <b>{{ selectedRows.length }} 个</b>
+          </div>
+          <div>
+            <small>同梯度样本</small>
+            <b>{{ chartRows.length }} 个</b>
+          </div>
+        </div>
+      </div>
+
+      <svg class="benchmark-chart" :viewBox="`0 0 ${chartGeometry.width} ${chartGeometry.height}`" role="img" aria-label="Benchmark 曲线对比图">
+        <line :x1="76" :x2="832" :y1="286" :y2="286" class="chart-axis" />
+        <line :x1="76" :x2="76" :y1="22" :y2="286" class="chart-axis" />
+        <g class="chart-grid">
+          <line v-for="n in 5" :key="`x-${n}`" :x1="76 + n * 126" :x2="76 + n * 126" y1="22" y2="286" />
+          <line v-for="n in 4" :key="`y-${n}`" x1="76" x2="832" :y1="286 - n * 53" :y2="286 - n * 53" />
+        </g>
+        <polyline v-if="chartGeometry.envelope" :points="chartGeometry.envelope" class="chart-envelope" />
+        <circle
+          v-for="point in chartGeometry.points"
+          :key="point.id"
+          :cx="point.cx"
+          :cy="point.cy"
+          :r="point.custom ? 7 : point.selected ? 5 : 3"
+          :class="{ selected: point.selected, custom: point.custom }"
+        >
+          <title>{{ point.name }}：{{ fieldValue(point.y, chart.yLabel) }}</title>
+        </circle>
+        <text x="454" y="326" class="chart-label">{{ chart.xLabel }}，最大 {{ fieldValue(chartGeometry.xMax, chart.xLabel) }}</text>
+        <text x="18" y="24" class="chart-label vertical">{{ chart.yLabel }}，最大 {{ fieldValue(chartGeometry.yMax, chart.yLabel) }}</text>
+      </svg>
+    </section>
+
+    <section class="benchmark-workspace">
+      <aside class="benchmark-panel benchmark-picker">
+        <header class="benchmark-panel-head">
+          <span>对象类型</span>
+          <b>{{ type.label }}</b>
+        </header>
+        <div class="benchmark-type-grid">
+          <button
+            v-for="item in benchmarkTypes"
+            :key="item.key"
+            type="button"
+            :class="{ active: typeKey === item.key }"
+            @click="typeKey = item.key"
+          >
+            <small>{{ item.group }}</small>
+            <b>{{ item.label }}</b>
+          </button>
+        </div>
+
+        <label class="benchmark-search">
+          <span>搜索原版对象</span>
+          <input v-model="query" type="search" placeholder="输入名称、种族、类型或武器系统" />
+        </label>
+
+        <div class="benchmark-picker-actions">
+          <button type="button" class="btn" @click="selectVisible">勾选当前页</button>
+          <button type="button" class="btn ghost" @click="clearSelected">清空</button>
+        </div>
+
+        <div class="benchmark-template-list">
+          <button
+            v-for="row in visibleRows"
+            :key="row.id"
+            type="button"
+            class="benchmark-template-row"
+            :class="{ active: activeTemplate?.id === row.id, selected: selectedIds.has(row.id) }"
+            @click="setActive(row)"
+          >
+            <input type="checkbox" :checked="selectedIds.has(row.id)" @click.stop="toggleSelected(row)" />
+            <span>
+              <b>{{ row.name }}</b>
+              <small>{{ row.subtitle || row.typeLabel }}</small>
+            </span>
+            <em>{{ fieldValue(row.metrics.power, 'DPS') }}</em>
+          </button>
+          <p v-if="!visibleRows.length" class="benchmark-empty">没有匹配的原版对象。</p>
+        </div>
+      </aside>
+
+      <section class="benchmark-panel benchmark-designer">
+        <header class="benchmark-panel-head">
+          <span>你的 mod 设计</span>
+          <button type="button" class="btn ghost" @click="resetDraft()">按当前标杆重置</button>
+        </header>
+
+        <label class="benchmark-field wide">
+          <span>设计名称</span>
+          <input v-model="draft.name" type="text" />
+        </label>
+
+        <div class="benchmark-production">
+          <span>生产方式</span>
+          <button type="button" :class="{ active: draft.productionMode === '常规' }" @click="setProductionMode('常规')">常规</button>
+          <button type="button" :class="{ active: draft.productionMode === 'TER' }" @click="setProductionMode('TER')">TER</button>
+          <button type="button" :class="{ active: draft.productionMode === '闭环' }" @click="setProductionMode('闭环')">闭环</button>
+        </div>
+
+        <template v-if="type.kind === 'weapon' || type.kind === 'turret'">
+          <h3>本体参数</h3>
+          <div class="benchmark-form-grid">
+            <label class="benchmark-field"><span>表面耐久</span><input :value="draft.bodyHull" type="number" min="0" @input="setDraftNumber('bodyHull', $event)" /></label>
+            <label class="benchmark-field"><span>平均价格</span><input :value="draft.price" type="number" min="0" @input="setDraftNumber('price', $event)" /></label>
+            <label class="benchmark-field"><span>转向速度</span><input :value="draft.turnSpeed" type="number" min="0" step="0.1" @input="setDraftNumber('turnSpeed', $event)" /></label>
+            <label class="benchmark-field"><span>转向加速度</span><input :value="draft.turnAccel" type="number" min="0" step="0.1" @input="setDraftNumber('turnAccel', $event)" /></label>
+            <label class="benchmark-field"><span>过热阈值</span><input :value="draft.overheat" type="number" min="0" @input="setDraftNumber('overheat', $event)" /></label>
+            <label class="benchmark-field"><span>散热速度</span><input :value="draft.coolRate" type="number" min="0" @input="setDraftNumber('coolRate', $event)" /></label>
+          </div>
+
+          <h3>弹体参数</h3>
+          <div class="benchmark-form-grid">
+            <label class="benchmark-field"><span>单发伤害</span><input :value="draft.damage" type="number" min="0" step="0.1" @input="setDraftNumber('damage', $event)" /></label>
+            <label class="benchmark-field"><span>射速（发/秒）</span><input :value="draft.fireRate" type="number" min="0" step="0.01" @input="setDraftNumber('fireRate', $event)" /></label>
+            <label class="benchmark-field"><span>弹体数量</span><input :value="draft.amount" type="number" min="0" step="1" @input="setDraftNumber('amount', $event)" /></label>
+            <label class="benchmark-field"><span>炮管数量</span><input :value="draft.barrels" type="number" min="0" step="1" @input="setDraftNumber('barrels', $event)" /></label>
+            <label class="benchmark-field"><span>弹体速度</span><input :value="draft.bulletSpeed" type="number" min="0" @input="setDraftNumber('bulletSpeed', $event)" /></label>
+            <label class="benchmark-field"><span>弹体寿命</span><input :value="draft.lifetime" type="number" min="0" step="0.1" @input="setDraftNumber('lifetime', $event)" /></label>
+            <label class="benchmark-field"><span>最大命中数</span><input :value="draft.maxHit" type="number" min="0" step="1" @input="setDraftNumber('maxHit', $event)" /></label>
+            <label class="benchmark-field"><span>每弹热量</span><input :value="draft.heat" type="number" min="0" step="0.1" @input="setDraftNumber('heat', $event)" /></label>
+          </div>
+        </template>
+
+        <template v-else-if="type.kind === 'ship'">
+          <h3>舰船规格</h3>
+          <div class="benchmark-form-grid">
+            <label class="benchmark-field"><span>船体耐久</span><input :value="draft.hull" type="number" min="0" @input="setDraftNumber('hull', $event)" /></label>
+            <label class="benchmark-field"><span>平均价格</span><input :value="draft.price" type="number" min="0" @input="setDraftNumber('price', $event)" /></label>
+            <label class="benchmark-field"><span>货舱容量</span><input :value="draft.cargo" type="number" min="0" @input="setDraftNumber('cargo', $event)" /></label>
+            <label class="benchmark-field"><span>主武器槽</span><input :value="draft.mainWeapons" type="number" min="0" step="1" @input="setDraftNumber('mainWeapons', $event)" /></label>
+            <label class="benchmark-field"><span>武器槽</span><input :value="draft.weaponSlots" type="number" min="0" step="1" @input="setDraftNumber('weaponSlots', $event)" /></label>
+            <label class="benchmark-field"><span>炮塔槽</span><input :value="draft.turretSlots" type="number" min="0" step="1" @input="setDraftNumber('turretSlots', $event)" /></label>
+            <label class="benchmark-field"><span>护盾槽</span><input :value="draft.shieldSlots" type="number" min="0" step="1" @input="setDraftNumber('shieldSlots', $event)" /></label>
+            <label class="benchmark-field"><span>停靠/机库</span><input :value="draft.dockSlots" type="number" min="0" step="1" @input="setDraftNumber('dockSlots', $event)" /></label>
+            <label class="benchmark-field wide"><span>无人机/单位容量</span><input :value="draft.droneCapacity" type="number" min="0" step="1" @input="setDraftNumber('droneCapacity', $event)" /></label>
+          </div>
+        </template>
+
+        <template v-else-if="type.kind === 'shield'">
+          <h3>护盾规格</h3>
+          <div class="benchmark-form-grid">
+            <label class="benchmark-field"><span>护盾容量</span><input :value="draft.capacity" type="number" min="0" @input="setDraftNumber('capacity', $event)" /></label>
+            <label class="benchmark-field"><span>恢复速度</span><input :value="draft.regen" type="number" min="0" @input="setDraftNumber('regen', $event)" /></label>
+            <label class="benchmark-field"><span>恢复延迟</span><input :value="draft.delay" type="number" min="0" step="0.1" @input="setDraftNumber('delay', $event)" /></label>
+            <label class="benchmark-field"><span>平均价格</span><input :value="draft.price" type="number" min="0" @input="setDraftNumber('price', $event)" /></label>
+          </div>
+        </template>
+
+        <template v-else>
+          <h3>引擎规格</h3>
+          <div class="benchmark-form-grid">
+            <label class="benchmark-field"><span>前向推力</span><input :value="draft.thrust" type="number" min="0" @input="setDraftNumber('thrust', $event)" /></label>
+            <label class="benchmark-field"><span>反向推力</span><input :value="draft.reverseThrust" type="number" min="0" @input="setDraftNumber('reverseThrust', $event)" /></label>
+            <label class="benchmark-field"><span>旅行推力</span><input :value="draft.travelThrust" type="number" min="0" @input="setDraftNumber('travelThrust', $event)" /></label>
+            <label class="benchmark-field"><span>旅行充能</span><input :value="draft.travelCharge" type="number" min="0" step="0.1" @input="setDraftNumber('travelCharge', $event)" /></label>
+            <label class="benchmark-field"><span>助推持续</span><input :value="draft.boostDuration" type="number" min="0" step="0.1" @input="setDraftNumber('boostDuration', $event)" /></label>
+            <label class="benchmark-field"><span>助推恢复</span><input :value="draft.boostRecharge" type="number" min="0" step="0.1" @input="setDraftNumber('boostRecharge', $event)" /></label>
+            <label class="benchmark-field wide"><span>平均价格</span><input :value="draft.price" type="number" min="0" @input="setDraftNumber('price', $event)" /></label>
+          </div>
+        </template>
+      </section>
+
+      <aside class="benchmark-panel benchmark-output">
+        <header class="benchmark-panel-head">
+          <span>对比结果</span>
+          <b>{{ selectedRows.length || chartRows.length }} 个标杆</b>
+        </header>
+
+        <div class="benchmark-compare-list">
+          <div v-for="[key, label] in metrics" :key="key" class="benchmark-compare-row">
+            <span>{{ label }}</span>
+            <b>{{ fieldValue(customMetrics[key], label) }}</b>
+            <small :class="diffClass(key, compareValue(customMetrics[key], avg[key]))">
+              {{ diffText(key, compareValue(customMetrics[key], avg[key])) }}
+            </small>
+          </div>
+        </div>
+
+        <section class="benchmark-material">
+          <h3>材料建议</h3>
+          <p>{{ material.text }}</p>
+          <small>{{ material.mode }}生产 / 来源标杆 {{ material.sourceCount }} 个。{{ material.note }}</small>
+        </section>
+
+        <section class="benchmark-xml">
+          <div>
+            <h3>导出为 XML 片段</h3>
+            <button type="button" class="btn" @click="copyXml">{{ copied ? '已复制' : '复制' }}</button>
+          </div>
+          <pre>{{ xmlSnippet }}</pre>
+        </section>
+      </aside>
+    </section>
+  </main>
+</template>
