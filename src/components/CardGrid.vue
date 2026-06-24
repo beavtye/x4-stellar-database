@@ -10,6 +10,14 @@ defineProps({
   selected: { type: Object, required: true }
 })
 defineEmits(['open', 'toggle-selected'])
+
+function cardFields(row, columns, nameKey, subKey) {
+  return columns
+    .filter((field) => field !== nameKey && field !== subKey)
+    .map((field) => ({ field, value: formatValue(row[field], field) }))
+    .filter((item) => item.value !== '—')
+    .slice(0, 8)
+}
 </script>
 
 <template>
@@ -23,9 +31,11 @@ defineEmits(['open', 'toggle-selected'])
         <input type="checkbox" :checked="selected.has(rowKey(row))" @click.stop @change="$emit('toggle-selected', row)" />
       </div>
       <dl>
-        <template v-for="field in columns.filter((f) => f !== nameKey && f !== subKey).slice(0, 8)" :key="field">
-          <dt>{{ field }}</dt>
-          <dd>{{ formatValue(row[field], field) }}</dd>
+        <template v-for="item in cardFields(row, columns, nameKey, subKey)" :key="item.field">
+          <div>
+            <dt>{{ item.field }}</dt>
+            <dd>{{ item.value }}</dd>
+          </div>
         </template>
       </dl>
     </article>

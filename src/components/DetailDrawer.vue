@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
-import { formatValue, isMissing } from '../utils/format'
+import { formatValue } from '../utils/format'
+import { buildDetailPresentation, rowSubtitle } from '../utils/detailPresentation'
 
 const props = defineProps({
   row: { type: Object, default: null },
@@ -11,10 +12,13 @@ const props = defineProps({
 })
 defineEmits(['close', 'toggle-selected', 'suggest'])
 
-const visibleFields = computed(() => {
-  if (!props.row) return []
-  return props.headers.filter((field) => !field.startsWith('__') && !isMissing(props.row[field]))
-})
+const detail = computed(() => buildDetailPresentation(props.row, props.headers, {
+  nameKey: props.nameKey,
+  subKey: props.subKey
+}))
+const subtitle = computed(() => rowSubtitle(props.row, props.subKey))
+const sourceLabel = computed(() => props.row?.__source || '')
+const sourceType = computed(() => props.row?.__source_type === 'mod' ? 'mod' : 'vanilla')
 </script>
 
 <template>
@@ -22,9 +26,10 @@ const visibleFields = computed(() => {
   <aside class="drawer" :class="{ open: row }">
     <template v-if="row">
       <header class="drawer-head">
-        <div>
+        <div class="drawer-title">
+          <span class="drawer-source" :class="sourceType">{{ sourceLabel }}</span>
           <h3>{{ formatValue(row[nameKey], nameKey) }}</h3>
-          <p>{{ row[subKey] || row.__uid }}</p>
+          <p>{{ subtitle }}</p>
         </div>
         <button type="button" class="icon-toggle" @click="$emit('close')">×</button>
       </header>
@@ -33,12 +38,25 @@ const visibleFields = computed(() => {
         <button type="button" class="btn" @click="$emit('suggest', row)">提交修订建议</button>
       </div>
       <div class="drawer-body">
-        <dl class="detail-list">
-          <template v-for="field in visibleFields" :key="field">
-            <dt>{{ field }}</dt>
-            <dd>{{ formatValue(row[field], field) }}</dd>
-          </template>
-        </dl>
+        <section v-for="section in detail.sections" :key="section.title" class="detail-group">
+          <h4>{{ section.title }}</h4>
+          <dl class="detail-grid" :class="{ compact: section.compact }">
+            <div v-for="item in section.items" :key="item.field" class="detail-item" :class="{ wide: item.wide }">
+              <dt>{{ item.field }}</dt>
+              <dd>{{ item.value }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <details v-if="detail.technicalItems.length" class="detail-tech">
+          <summary>技术信息 / 展开显示</summary>
+          <dl class="detail-grid">
+            <div v-for="item in detail.technicalItems" :key="item.field" class="detail-item wide tech">
+              <dt>{{ item.field }}</dt>
+              <dd>{{ item.value }}</dd>
+            </div>
+          </dl>
+        </details>
       </div>
     </template>
   </aside>

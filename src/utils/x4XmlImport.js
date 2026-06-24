@@ -36,11 +36,12 @@ export async function parseX4DataFolder(fileList) {
 
   for (const macro of macros.values()) {
     if (isBulletMacro(macro)) continue
+    if (isStorageMacro(macro)) continue
     const ware = findWareForMacro(wares, macro)
-    if (isShipMacro(macro)) rows.ships.push(shipRow(macro, ware, textMap))
-    else if (isTurretMacro(macro)) rows.turrets.push(turretRow(macro, ware, bulletMacros, textMap))
-    else if (isWeaponMacro(macro)) rows.weapons.push(weaponRow(macro, ware, bulletMacros, textMap))
-    else if (isEquipmentMacro(macro)) rows.equipment.push(equipmentRow(macro, ware, textMap))
+    if (isShipMacro(macro)) rows.ships.push(shipRow(macro, ware))
+    else if (isTurretMacro(macro)) rows.turrets.push(turretRow(macro, ware, bulletMacros))
+    else if (isWeaponMacro(macro)) rows.weapons.push(weaponRow(macro, ware, bulletMacros))
+    else if (isEquipmentMacro(macro)) rows.equipment.push(equipmentRow(macro, ware))
   }
 
   for (const ware of wares.values()) {
@@ -172,15 +173,32 @@ function buildMacroIndex(xmlDocs, textMaps) {
       const reload = first(node, 'reload')
       const heat = first(node, 'heat')
       const rawName = ident?.getAttribute('name') || ident?.getAttribute('basename')
+      const rawBaseName = ident?.getAttribute('basename')
       const rawDescription = ident?.getAttribute('description')
+      const rawVariation = ident?.getAttribute('variation')
+      const rawShortVariation = ident?.getAttribute('shortvariation')
+      const zhName = resolveText(rawName, textMaps.zh)
+      const enName = resolveText(rawName, textMaps.en)
+      const zhBaseName = resolveText(rawBaseName, textMaps.zh)
+      const enBaseName = resolveText(rawBaseName, textMaps.en)
+      const zhVariation = resolveText(rawVariation, textMaps.zh)
+      const enVariation = resolveText(rawVariation, textMaps.en)
+      const zhShortVariation = resolveText(rawShortVariation, textMaps.zh)
+      const enShortVariation = resolveText(rawShortVariation, textMaps.en)
       macros.set(name, {
         name,
         className: node.getAttribute('class') || '',
         path,
         node,
         props,
-        zhName: resolveText(rawName, textMaps.zh),
-        enName: resolveText(rawName, textMaps.en),
+        zhName,
+        enName,
+        zhBaseName,
+        enBaseName,
+        zhVariation,
+        enVariation,
+        zhShortVariation,
+        enShortVariation,
         zhDescription: resolveText(rawDescription, textMaps.zh),
         enDescription: resolveText(rawDescription, textMaps.en),
         hull: numberAttr(hull, 'max') || numberAttr(props, 'hull'),
@@ -249,6 +267,7 @@ function shipRow(macro, ware) {
     'ware ID': ware?.id,
     '船只 macro': macro.name,
     建造材料: ware?.materials,
+    搜索别名: aliasText(macro, ware, fallbackName),
     备注: bestText(macro.zhDescription, ware?.zhDescription, macro.enDescription, ware?.enDescription)
   })
 }
@@ -286,6 +305,7 @@ function weaponRow(macro, ware, bulletMacros) {
     '武器 macro': macro.name,
     '弹体 macro': bullet?.name || macro.bulletRefs[0],
     建造材料: ware?.materials,
+    搜索别名: aliasText(macro, ware, fallbackName),
     备注: bestText(macro.zhDescription, ware?.zhDescription, macro.enDescription, ware?.enDescription)
   })
 }
@@ -316,6 +336,7 @@ function turretRow(macro, ware, bulletMacros) {
     '炮塔 macro': macro.name,
     '弹体 macro': bullet?.name || macro.bulletRefs[0],
     建造材料: ware?.materials,
+    搜索别名: aliasText(macro, ware, fallbackName),
     备注: bestText(macro.zhDescription, ware?.zhDescription, macro.enDescription, ware?.enDescription)
   })
 }
@@ -337,6 +358,7 @@ function equipmentRow(macro, ware) {
     'ware ID': ware?.id,
     '装备 macro': macro.name,
     建造材料: ware?.materials,
+    搜索别名: aliasText(macro, ware, fallbackName),
     备注: bestText(macro.zhDescription, ware?.zhDescription, macro.enDescription, ware?.enDescription)
   })
 }
@@ -356,6 +378,7 @@ function rowFromWareOnly(ware, dataset) {
     '最高价格（Cr）': ware.maxPrice,
     'ware ID': ware.id,
     建造材料: ware.materials,
+    搜索别名: readableIdentifier(ware.id),
     备注: bestText(ware.zhDescription, ware.enDescription)
   }
   if (dataset === 'ships') base['船级/类型'] = shipClassLabel(ware.id)
@@ -413,12 +436,17 @@ function isBulletMacro(macro) {
   return /bullet|ammunition|missile/i.test(`${macro.className} ${macro.name}`)
 }
 
+function isStorageMacro(macro) {
+  return /storage/i.test(`${macro.className} ${macro.name}`)
+}
+
 function isEquipmentMacro(macro) {
   return /engine|shield|scanner|software|thruster|dock|module/i.test(`${macro.className} ${macro.name}`) && !isShipMacro(macro)
 }
 
 function datasetFromWare(ware) {
   const text = `${ware.id} ${ware.group} ${ware.tags} ${ware.macro}`.toLowerCase()
+  if (/storage/.test(text)) return ''
   if (/ship/.test(text)) return 'ships'
   if (/bullet|ammunition|ammo|missilebullet/.test(text)) return 'equipment'
   if (/turret/.test(text)) return 'turrets'
@@ -429,6 +457,33 @@ function datasetFromWare(ware) {
 
 function cleanRow(row) {
   return Object.fromEntries(Object.entries(row).filter(([, value]) => value !== '' && value !== null && value !== undefined && value !== 0))
+}
+
+function aliasText(macro, ware, fallbackName) {
+  const values = [
+    ware?.zhName,
+    ware?.enName,
+    macro.zhName,
+    macro.enName,
+    macro.zhBaseName,
+    macro.enBaseName,
+    macro.zhVariation,
+    macro.enVariation,
+    macro.zhShortVariation,
+    macro.enShortVariation,
+    readableIdentifier(ware?.id),
+    readableIdentifier(macro.name),
+    fallbackName
+  ]
+  return [...new Set(values.map(cleanAlias).filter(Boolean))].join('；')
+}
+
+function cleanAlias(value) {
+  return String(value || '')
+    .replace(/\{\d+,\s*\d+\}/g, '')
+    .replace(/[()]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function removeEmptyDatasets(rows) {
@@ -540,9 +595,42 @@ function range(speed, lifetime) {
 function materialText(node) {
   const items = []
   for (const item of node.querySelectorAll('production ware[ware][amount], production primary ware[ware][amount], production method ware[ware][amount]')) {
-    items.push(`${item.getAttribute('ware')}:${item.getAttribute('amount')}`)
+    items.push(`${wareLabel(item.getAttribute('ware'))} ×${item.getAttribute('amount')}`)
   }
   return [...new Set(items)].join('; ')
+}
+
+const WARE_LABELS = {
+  advancedelectronics: '高级电子元件',
+  antimattercells: '反物质电池',
+  antimatterconverters: '反物质转换器',
+  claytronics: '黏土电子',
+  computronicsubstrate: '计算基板',
+  dronecomponents: '无人机部件',
+  energycells: '能量电池',
+  engineparts: '引擎部件',
+  fieldcoils: '场线圈',
+  graphene: '石墨烯',
+  hullparts: '船体部件',
+  missilecomponents: '导弹部件',
+  'plasma conductors': '等离子导体',
+  plasmaconductors: '等离子导体',
+  quantumtubes: '量子管',
+  refinedmetals: '精炼金属',
+  scanningarrays: '扫描阵列',
+  shieldcomponents: '护盾元件',
+  siliconcarbide: '碳化硅',
+  siliconwafers: '硅晶圆',
+  smartchips: '智能芯片',
+  superfluidcoolant: '超流体冷却剂',
+  turretcomponents: '炮塔元件',
+  weaponcomponents: '武器部件'
+}
+
+function wareLabel(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  return WARE_LABELS[raw.toLowerCase()] || readableIdentifier(raw)
 }
 
 function sizeFromText(text) {
