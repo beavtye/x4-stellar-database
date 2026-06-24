@@ -134,7 +134,7 @@ function buildCategories(chapters) {
   return [{ key: 'all', label: '全部', count: chapters.length }, ...categories.values()]
 }
 
-function categoryLabel(category) {
+export function categoryLabel(category) {
   const labels = {
     overview: '导读',
     appendix: '附录',

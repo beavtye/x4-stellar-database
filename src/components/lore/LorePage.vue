@@ -63,10 +63,10 @@ onMounted(() => {
 <template>
   <main class="lore-page">
     <header class="lore-topbar">
-      <div>
-        <span>X4 LORE ARCHIVE</span>
+      <div class="lore-topbar-info">
+        <span>X4 编年史档案</span>
         <h1>编年史</h1>
-        <p>{{ loreStats.chapters }} 个章节 / {{ loreStats.sections }} 个小节 / {{ loreStats.cards }} 张档案卡，按章节阅读 X 宇宙背景资料。</p>
+        <p>{{ loreStats.chapters }} 章 · {{ loreStats.sections }} 节 · {{ loreStats.cards }} 卡 — 按章节阅读 X 宇宙背景资料</p>
       </div>
       <nav class="lore-page-links" aria-label="页面入口">
         <a class="btn ghost" href="./">数据库</a>

@@ -13,8 +13,8 @@ defineEmits(['select', 'update:category', 'update:query'])
 <template>
   <aside class="lore-sidebar">
     <header class="lore-panel-head">
-      <span>ARCHIVE</span>
-      <b>{{ chapters.length }} 个章节</b>
+      <span>章节索引</span>
+      <b>{{ chapters.length }} 章</b>
     </header>
 
     <label class="lore-search">
@@ -22,7 +22,7 @@ defineEmits(['select', 'update:category', 'update:query'])
       <input
         :value="query"
         type="search"
-        placeholder="搜索章节、派系、事件或关键词"
+        placeholder="章节、派系、事件或关键词"
         autocomplete="off"
         @input="$emit('update:query', $event.target.value)"
       />
@@ -41,7 +41,7 @@ defineEmits(['select', 'update:category', 'update:query'])
       </button>
     </div>
 
-    <div class="lore-chapter-list">
+    <nav class="lore-chapter-list">
       <button
         v-for="chapter in chapters"
         :key="chapter.id"
@@ -50,13 +50,13 @@ defineEmits(['select', 'update:category', 'update:query'])
         :class="{ active: currentId === chapter.id }"
         @click="$emit('select', chapter)"
       >
-        <i>{{ chapter.volume || '—' }}</i>
-        <span>
+        <span class="lore-chapter-volume">{{ chapter.volume || '—' }}</span>
+        <span class="lore-chapter-text">
           <b>{{ chapter.title }}</b>
-          <small>{{ chapter.sections.length }} 小节 / {{ chapter.cards.length }} 档案卡</small>
+          <small>{{ chapter.sections.length }} 节 / {{ chapter.cards.length }} 卡</small>
         </span>
       </button>
       <p v-if="!chapters.length" class="lore-list-empty">没有匹配的编年史章节。</p>
-    </div>
+    </nav>
   </aside>
 </template>
