@@ -180,9 +180,9 @@ function robustMax(values, fallback) {
   <main class="benchmark-page">
     <header class="benchmark-topbar">
       <div>
-        <span>MOD BENCHMARK</span>
-        <h1>数值标杆工具</h1>
-        <p>先选原版同类对象，再填写你的 mod 设计；曲线、百分比和材料建议会实时更新。</p>
+        <span class="benchmark-topbar-label">数值标杆工具</span>
+        <h1>正在对比 <strong>{{ type.group }}</strong> · {{ type.label }}</h1>
+        <p>{{ type.hint }}</p>
       </div>
       <nav class="benchmark-links" aria-label="页面入口">
         <a class="btn ghost" href="./">数据库</a>
@@ -195,19 +195,19 @@ function robustMax(values, fallback) {
       <div class="benchmark-chart-head">
         <div>
           <span>{{ type.group }} / {{ type.label }}</span>
-          <h2>曲线对比</h2>
-          <p>{{ chart.xLabel }} × {{ chart.yLabel }}。细点是同梯度原版对象，亮点是勾选标杆，金点是你的设计。</p>
+          <h2>强度曲线</h2>
+          <p>{{ chart.xLabel }} × {{ chart.yLabel }}。灰点为同梯度原版对象，<mark class="chart-legend-selected">高亮</mark>为已勾选标杆，<mark class="chart-legend-custom">金色</mark>为你的设计。</p>
         </div>
         <div class="benchmark-kpis">
-          <div>
+          <div class="kpi-custom">
             <small>你的强度</small>
             <b>{{ fieldValue(customMetrics.power, 'DPS') }}</b>
           </div>
-          <div>
-            <small>勾选标杆</small>
+          <div class="kpi-benchmark">
+            <small>已勾选标杆</small>
             <b>{{ selectedRows.length }} 个</b>
           </div>
-          <div>
+          <div class="kpi-sample">
             <small>同梯度样本</small>
             <b>{{ chartRows.length }} 个</b>
           </div>
@@ -240,8 +240,8 @@ function robustMax(values, fallback) {
     <section class="benchmark-workspace">
       <aside class="benchmark-panel benchmark-picker">
         <header class="benchmark-panel-head">
-          <span>对象类型</span>
-          <b>{{ type.label }}</b>
+          <span>原版对象选择</span>
+          <b>{{ type.label }} · {{ rows.length }} 个</b>
         </header>
         <div class="benchmark-type-grid">
           <button
@@ -266,6 +266,8 @@ function robustMax(values, fallback) {
           <button type="button" class="btn ghost" @click="clearSelected">清空</button>
         </div>
 
+        <p class="benchmark-select-hint">点击行设为当前标杆，勾选框加入多选对比。</p>
+
         <div class="benchmark-template-list">
           <button
             v-for="row in visibleRows"
@@ -288,7 +290,7 @@ function robustMax(values, fallback) {
 
       <section class="benchmark-panel benchmark-designer">
         <header class="benchmark-panel-head">
-          <span>你的 mod 设计</span>
+          <span>你的 mod 设计 — {{ type.label }}</span>
           <button type="button" class="btn ghost" @click="resetDraft()">按当前标杆重置</button>
         </header>
 
@@ -373,6 +375,11 @@ function robustMax(values, fallback) {
           <b>{{ selectedRows.length || chartRows.length }} 个标杆</b>
         </header>
 
+        <div class="benchmark-compare-header">
+          <span>指标</span>
+          <span>你的设计</span>
+          <span>对比标杆均值</span>
+        </div>
         <div class="benchmark-compare-list">
           <div v-for="[key, label] in metrics" :key="key" class="benchmark-compare-row">
             <span>{{ label }}</span>
@@ -389,13 +396,13 @@ function robustMax(values, fallback) {
           <small>{{ material.mode }}生产 / 来源标杆 {{ material.sourceCount }} 个。{{ material.note }}</small>
         </section>
 
-        <section class="benchmark-xml">
-          <div>
+        <details class="benchmark-xml">
+          <summary>
             <h3>导出为 XML 片段</h3>
-            <button type="button" class="btn" @click="copyXml">{{ copied ? '已复制' : '复制' }}</button>
-          </div>
+            <button type="button" class="btn" @click.prevent="copyXml">{{ copied ? '已复制' : '复制到剪贴板' }}</button>
+          </summary>
           <pre>{{ xmlSnippet }}</pre>
-        </section>
+        </details>
       </aside>
     </section>
   </main>

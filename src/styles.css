@@ -1560,10 +1560,12 @@ input::placeholder, textarea::placeholder {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
-  padding: 12px 14px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, var(--panel)), var(--panel) 80%);
 }
 
-.benchmark-topbar span,
+.benchmark-topbar .benchmark-topbar-label,
 .benchmark-chart-head span,
 .benchmark-panel-head span {
   color: var(--accent);
@@ -1571,7 +1573,16 @@ input::placeholder, textarea::placeholder {
   letter-spacing: 0.06em;
 }
 
-.benchmark-topbar h1,
+.benchmark-topbar h1 {
+  margin: 4px 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.benchmark-topbar h1 strong {
+  color: var(--accent);
+}
+
 .benchmark-chart-head h2 {
   margin: 4px 0;
   font-size: 22px;
@@ -1585,6 +1596,18 @@ input::placeholder, textarea::placeholder {
   line-height: 1.55;
 }
 
+.chart-legend-selected {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+  padding: 1px 4px;
+}
+
+.chart-legend-custom {
+  background: color-mix(in srgb, #d49b28 18%, transparent);
+  color: #d49b28;
+  padding: 1px 4px;
+}
+
 .benchmark-links {
   display: flex;
   flex-wrap: wrap;
@@ -1593,7 +1616,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .benchmark-chart-card {
-  padding: 14px;
+  padding: 14px 16px;
 }
 
 .benchmark-chart-head {
@@ -1601,7 +1624,7 @@ input::placeholder, textarea::placeholder {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
   align-items: start;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .benchmark-kpis {
@@ -1612,8 +1635,21 @@ input::placeholder, textarea::placeholder {
 
 .benchmark-kpis div {
   border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
   background: var(--panel-2);
   padding: 9px 10px;
+}
+
+.benchmark-kpis .kpi-custom {
+  border-left-color: #d49b28;
+}
+
+.benchmark-kpis .kpi-benchmark {
+  border-left-color: var(--accent);
+}
+
+.benchmark-kpis .kpi-sample {
+  border-left-color: var(--muted);
 }
 
 .benchmark-kpis small,
@@ -1630,6 +1666,10 @@ input::placeholder, textarea::placeholder {
   margin-top: 5px;
   color: var(--accent);
   font: 900 18px ui-monospace, Consolas, monospace;
+}
+
+.benchmark-kpis .kpi-custom b {
+  color: #d49b28;
 }
 
 .benchmark-chart {
@@ -1700,6 +1740,10 @@ input::placeholder, textarea::placeholder {
   overflow: hidden;
 }
 
+.benchmark-designer {
+  border-left: 3px solid color-mix(in srgb, #d49b28 55%, var(--line));
+}
+
 .benchmark-panel-head {
   min-height: 50px;
   display: flex;
@@ -1708,10 +1752,12 @@ input::placeholder, textarea::placeholder {
   gap: 10px;
   padding: 11px 12px;
   border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 4%, var(--panel-2)), var(--panel-2) 80%);
 }
 
 .benchmark-panel-head b {
   font-size: 13px;
+  color: var(--muted);
 }
 
 .benchmark-picker,
@@ -1747,8 +1793,25 @@ input::placeholder, textarea::placeholder {
   padding: 8px 9px;
 }
 
-.benchmark-type-grid button:hover,
-.benchmark-type-grid button.active,
+.benchmark-type-grid button {
+  transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
+}
+
+.benchmark-type-grid button:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel-2));
+}
+
+.benchmark-type-grid button.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel-2));
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+.benchmark-type-grid button.active small {
+  color: var(--accent);
+}
+
 .benchmark-production button:hover,
 .benchmark-production button.active {
   border-color: var(--accent);
@@ -1785,6 +1848,16 @@ input::placeholder, textarea::placeholder {
   border-bottom: 1px solid var(--line);
 }
 
+.benchmark-select-hint {
+  margin: 0;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  background: color-mix(in srgb, var(--accent) 3%, transparent);
+}
+
 .benchmark-template-list {
   min-height: 260px;
   max-height: 440px;
@@ -1807,19 +1880,36 @@ input::placeholder, textarea::placeholder {
   padding: 9px;
   text-align: left;
   cursor: pointer;
+  border-radius: 4px;
+  transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
 }
 
-.benchmark-template-row:hover,
-.benchmark-template-row.active {
+.benchmark-template-row:hover {
   border-color: var(--accent);
 }
 
-.benchmark-template-row.selected {
-  box-shadow: inset 3px 0 var(--accent);
+.benchmark-template-row.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel-2));
 }
 
-.benchmark-template-row input {
-  width: auto;
+.benchmark-template-row.selected {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--panel-2));
+}
+
+.benchmark-template-row.selected.active {
+  box-shadow: inset 3px 0 var(--accent), 0 0 0 1px var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel-2));
+}
+
+.benchmark-template-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .benchmark-template-row b,
@@ -1853,7 +1943,9 @@ input::placeholder, textarea::placeholder {
 .benchmark-material h3,
 .benchmark-xml h3 {
   margin: 12px 0 9px;
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
 }
 
 .benchmark-form-grid {
@@ -1891,13 +1983,29 @@ input::placeholder, textarea::placeholder {
   text-align: center;
 }
 
+.benchmark-compare-header {
+  display: grid;
+  grid-template-columns: minmax(82px, 0.85fr) minmax(82px, 0.75fr) minmax(100px, 1fr);
+  gap: 8px;
+  align-items: end;
+  padding: 10px 12px 4px;
+  border-bottom: 2px solid color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.benchmark-compare-header span {
+  color: var(--accent);
+  font: 700 10px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .benchmark-compare-list {
   min-height: 0;
   overflow: auto;
   display: grid;
   align-content: start;
-  gap: 8px;
-  padding: 12px;
+  gap: 6px;
+  padding: 8px 12px 12px;
 }
 
 .benchmark-compare-row {
@@ -1955,15 +2063,45 @@ input::placeholder, textarea::placeholder {
   word-break: break-word;
 }
 
-.benchmark-xml > div {
+.benchmark-xml summary {
   display: flex;
   justify-content: space-between;
   gap: 10px;
   align-items: center;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.benchmark-xml summary::-webkit-details-marker {
+  display: none;
+}
+
+.benchmark-xml summary h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.benchmark-xml summary h3::before {
+  content: '▶';
+  display: inline-block;
+  font-size: 10px;
+  color: var(--muted);
+  transition: transform 0.18s;
+}
+
+.benchmark-xml[open] summary h3::before {
+  transform: rotate(90deg);
+}
+
+.benchmark-xml summary .btn {
+  flex-shrink: 0;
 }
 
 .benchmark-xml pre {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   max-height: 190px;
   overflow: auto;
   border: 1px solid var(--line);
