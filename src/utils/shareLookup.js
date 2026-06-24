@@ -19,6 +19,16 @@ const TYPE_LABELS = {
   lore: '编年史档案'
 }
 
+const TYPE_ACCENT = {
+  ship: '#5fe1ff',
+  weapon: '#ff6b7c',
+  turret: '#ff9f43',
+  equipment: '#5fd990',
+  sector: '#9f7aea',
+  lore: '#ffd166',
+  unknown: '#88a7b8'
+}
+
 const FIELD_PRESETS = {
   ship: ['种族', '势力', '尺寸', '船级/类型', '主要用途', '船体耐久', '货舱容量', '平均价格（Cr）'],
   weapon: ['制造种族', '尺寸', 'Mk', '武器类型', '单发伤害', '理论 DPS（估算）', '射程（米）', '平均价格（Cr）'],
@@ -37,6 +47,12 @@ const ID_FIELDS = [
   '英文名',
   '中文名'
 ]
+
+// Internal / technical field names that should never appear as display fields
+const INTERNAL_FIELD_RE = /^(ware ID|__uid|component 引用|船只 macro|武器 macro|炮塔 macro|装备 macro|来源文件|来源行|default|__source|__source_type|__index)$/i
+
+// Internal-looking values to filter out
+const INTERNAL_VALUE_RE = /^(capitalequipment|militaryequipment|militaryship|generaluseship|default:\s*\d+s\s*x\d+)$/i
 
 export async function lookupShareRecord(route) {
   if (!route?.type || !route?.id) {
@@ -94,7 +110,8 @@ async function lookupCoreRecord(route) {
     summary: buildSummary(row, route.type),
     fields,
     tags: compactTags(row, route.type),
-    source: 'X4 星际数据库'
+    source: 'X4 星际数据库',
+    accentColor: TYPE_ACCENT[route.type] || TYPE_ACCENT.unknown
   }
 }
 
@@ -119,39 +136,48 @@ function lookupCompactRecord(route, records, family) {
     summary: clampText(row.summary, family === 'lore' ? 120 : 150),
     fields: compactFields(row.fields, family === 'lore' ? 5 : 6),
     tags: (row.tags || []).slice(0, 4),
-    source: 'X4 星际数据库'
+    source: 'X4 星际数据库',
+    accentColor: TYPE_ACCENT[family] || TYPE_ACCENT.unknown
   }
 }
 
 function missingRecord(route, message) {
+  const type = route?.type || 'unknown'
   return {
     found: false,
-    type: route?.type || 'unknown',
+    type,
     label: '分享卡',
     id: route?.id || '',
     title: '未找到分享条目',
     subtitle: message,
     summary: '请检查 URL 中的 type 与 id。支持 ship、weapon、turret、equipment、sector、lore。',
     fields: [
-      ['type', route?.type || '—'],
-      ['id', route?.id || '—']
+      ['请求类型', TYPE_LABELS[type] || type],
+      ['请求 ID', route?.id || '—']
     ],
     tags: ['not-found'],
-    source: 'X4 星际数据库'
+    source: 'X4 星际数据库',
+    accentColor: TYPE_ACCENT[type] || TYPE_ACCENT.unknown
   }
 }
 
 function fieldsFromRow(row, fields) {
   return fields
+    .filter((field) => !INTERNAL_FIELD_RE.test(field))
     .map((field) => [field, row[field]])
-    .filter(([, value]) => !isMissing(value))
+    .filter(([, value]) => !isMissing(value) && !isInternalValue(value))
     .slice(0, 8)
     .map(([field, value]) => [field, formatValue(value, field)])
 }
 
 function compactFields(fields = [], limit = 6) {
   return fields
-    .filter(([field, value]) => !isMissing(field) && !isMissing(value))
+    .filter(([field, value]) =>
+      !isMissing(field) &&
+      !isMissing(value) &&
+      !INTERNAL_FIELD_RE.test(String(field)) &&
+      !isInternalValue(value)
+    )
     .slice(0, limit)
     .map(([field, value]) => [field, formatValue(value, field)])
 }
@@ -159,7 +185,7 @@ function compactFields(fields = [], limit = 6) {
 function buildSubtitle(row, fields) {
   return fields
     .map((field) => row[field])
-    .filter((value) => !isMissing(value))
+    .filter((value) => !isMissing(value) && !isInternalValue(value))
     .slice(0, 3)
     .join(' / ') || 'X4 数据档案'
 }
@@ -188,7 +214,13 @@ function compactTags(row, type) {
     row.制造种族 || row.种族,
     row.尺寸,
     row.Mk && `Mk ${row.Mk}`
-  ].filter((value) => !isMissing(value)).slice(0, 4).map(String)
+  ].filter((value) => !isMissing(value) && !isInternalValue(value)).slice(0, 4).map(String)
+}
+
+function isInternalValue(value) {
+  if (isMissing(value)) return true
+  const text = String(value).trim()
+  return INTERNAL_VALUE_RE.test(text)
 }
 
 function safeText(value) {

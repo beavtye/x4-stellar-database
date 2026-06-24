@@ -2612,6 +2612,10 @@ tbody tr.selected .select-col {
   }
 }
 
+/* ========================================
+   Share Card — X4 星际数据库资料卡
+   ======================================== */
+
 .share-page {
   min-height: 100vh;
   margin: 0;
@@ -2620,9 +2624,9 @@ tbody tr.selected .select-col {
   gap: 12px;
   padding: 22px;
   background:
-    radial-gradient(circle at 18% 16%, rgba(85, 191, 224, 0.14), transparent 28%),
-    radial-gradient(circle at 84% 78%, rgba(87, 212, 140, 0.1), transparent 26%),
-    linear-gradient(135deg, #05111a 0%, #0b1622 54%, #03070d 100%);
+    radial-gradient(circle at 18% 16%, rgba(85, 191, 224, 0.12), transparent 30%),
+    radial-gradient(circle at 84% 78%, rgba(87, 212, 140, 0.08), transparent 28%),
+    linear-gradient(135deg, #040d16 0%, #091520 54%, #02060c 100%);
   color: #eef7fb;
 }
 
@@ -2630,18 +2634,26 @@ tbody tr.selected .select-col {
   padding: 16px;
 }
 
+/* --- Card shell --- */
+
 .share-card {
+  --share-accent: #5fe1ff;
+  --share-accent-dim: rgba(95, 225, 255, 0.12);
+  --share-accent-glow: rgba(95, 225, 255, 0.18);
+
   width: 1200px;
   height: 675px;
   max-width: calc(100vw - 44px);
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(133, 181, 207, 0.42);
+  border: 1px solid rgba(133, 181, 207, 0.36);
   background:
-    radial-gradient(circle at 82% 10%, rgba(95, 225, 255, 0.15), transparent 28%),
-    radial-gradient(circle at 12% 88%, rgba(117, 224, 162, 0.12), transparent 24%),
+    radial-gradient(circle at 82% 10%, var(--share-accent-dim), transparent 28%),
+    radial-gradient(circle at 12% 88%, rgba(117, 224, 162, 0.08), transparent 24%),
     linear-gradient(135deg, #07121d 0%, #0b1724 52%, #050a12 100%);
-  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 28px 70px rgba(0, 0, 0, 0.5);
   isolation: isolate;
 }
 
@@ -2651,42 +2663,90 @@ tbody tr.selected .select-col {
   max-height: calc(100vh - 64px);
 }
 
+/* --- Type accent band (top edge) --- */
+
+.share-accent-band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--share-accent);
+  box-shadow: 0 0 18px var(--share-accent-glow), 0 2px 8px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+/* --- Grid overlay --- */
+
 .share-card::before {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
   background-size: 32px 32px;
   mask: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
-  opacity: 0.45;
+  opacity: 0.4;
   pointer-events: none;
 }
 
+/* --- Watermark --- */
+
 .share-card::after {
-  content: "X4 STELLAR DATABASE";
-  position: absolute;
-  right: 28px;
-  bottom: 20px;
-  color: rgba(151, 178, 194, 0.2);
-  font: 800 18px ui-monospace, Consolas, monospace;
-  letter-spacing: 0;
+  content: "";
+  /* handled by .share-watermark instead — no pseudo-content */
 }
+
+.share-watermark {
+  position: absolute;
+  right: 32px;
+  bottom: 22px;
+  color: rgba(151, 178, 194, 0.14);
+  font: 800 17px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- Missing / error card --- */
 
 .share-card.missing {
   background:
-    radial-gradient(circle at 82% 10%, rgba(255, 107, 124, 0.14), transparent 28%),
-    linear-gradient(135deg, #13090e 0%, #151822 56%, #050a12 100%);
+    radial-gradient(circle at 82% 10%, rgba(255, 107, 124, 0.12), transparent 28%),
+    radial-gradient(circle at 12% 88%, rgba(255, 107, 124, 0.06), transparent 24%),
+    linear-gradient(135deg, #11090d 0%, #131620 56%, #050a12 100%);
+  border-color: rgba(255, 107, 124, 0.32);
 }
+
+.share-card.missing .share-accent-band {
+  background: #ff6b7c;
+  box-shadow: 0 0 18px rgba(255, 107, 124, 0.2), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.share-card.missing .share-mark {
+  border-color: rgba(255, 107, 124, 0.4);
+  color: #ff6b7c;
+  box-shadow: inset 0 0 28px rgba(255, 107, 124, 0.08);
+}
+
+.share-card.missing .share-type-badge {
+  background: rgba(255, 107, 124, 0.14);
+  border-color: rgba(255, 107, 124, 0.35);
+  color: #ff8a96;
+}
+
+/* --- Scanline overlay --- */
 
 .share-scanline {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.18));
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
+
+/* --- Inner layout --- */
 
 .share-card-inner {
   position: relative;
@@ -2695,9 +2755,11 @@ tbody tr.selected .select-col {
   padding: 42px 48px 34px;
   display: grid;
   grid-template-rows: auto auto 1fr auto auto;
-  gap: 20px;
+  gap: 18px;
   min-width: 0;
 }
+
+/* --- Header --- */
 
 .share-card-head {
   display: grid;
@@ -2706,57 +2768,86 @@ tbody tr.selected .select-col {
   align-items: start;
 }
 
-.share-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: #5fe1ff;
-  font: 800 14px ui-monospace, Consolas, monospace;
+.share-head-left {
+  min-width: 0;
 }
 
-.share-kicker::before {
+/* Type badge (pill) */
+.share-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 1px solid rgba(95, 225, 255, 0.35);
+  background: rgba(95, 225, 255, 0.1);
+  color: var(--share-accent);
+  font: 800 12px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.share-type-badge::before {
   content: "";
-  width: 42px;
-  height: 2px;
-  background: #5fe1ff;
-  box-shadow: 0 0 18px rgba(95, 225, 255, 0.72);
+  width: 8px;
+  height: 8px;
+  background: var(--share-accent);
+  box-shadow: 0 0 10px var(--share-accent-glow);
 }
 
 .share-card h1 {
-  margin: 14px 0 7px;
+  margin: 0 0 6px;
   color: #f7fbff;
-  font-size: 54px;
+  font-size: 52px;
   line-height: 1.08;
-  letter-spacing: 0;
+  letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
 
-.share-card-head p {
+.share-subtitle {
   margin: 0;
   color: #aec4d1;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.35;
 }
+
+/* --- X4 Mark --- */
 
 .share-mark {
   width: 92px;
   height: 92px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(95, 225, 255, 0.45);
-  background: rgba(5, 13, 20, 0.58);
-  color: #5fe1ff;
+  border: 1px solid rgba(95, 225, 255, 0.4);
+  background: rgba(5, 13, 20, 0.55);
+  color: var(--share-accent);
   font: 900 30px ui-monospace, Consolas, monospace;
-  box-shadow: inset 0 0 28px rgba(95, 225, 255, 0.08);
+  box-shadow: inset 0 0 24px var(--share-accent-dim);
 }
+
+/* --- Section labels (portrait mode) --- */
+
+.share-section-label {
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(133, 181, 207, 0.2);
+  color: var(--share-accent);
+  font: 800 13px ui-monospace, Consolas, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* --- Summary --- */
 
 .share-summary {
   margin: 0;
   max-width: 980px;
   color: #d7e6ee;
-  font-size: 21px;
+  font-size: 20px;
   line-height: 1.56;
 }
+
+/* --- Fields grid --- */
 
 .share-fields {
   display: grid;
@@ -2768,26 +2859,34 @@ tbody tr.selected .select-col {
 
 .share-field {
   min-width: 0;
-  min-height: 92px;
-  border: 1px solid rgba(133, 181, 207, 0.28);
-  background: rgba(8, 19, 29, 0.72);
-  padding: 13px 14px;
+  min-height: 88px;
+  border: 1px solid rgba(133, 181, 207, 0.22);
+  border-left: 2px solid var(--share-accent);
+  background: rgba(8, 19, 29, 0.68);
+  padding: 12px 14px;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .share-field dt {
   color: #88a7b8;
-  font-size: 15px;
-  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
 }
 
 .share-field dd {
   margin: 0;
   color: #f2f8fb;
-  font-size: 23px;
+  font-size: 22px;
   line-height: 1.22;
   font-weight: 800;
   overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, Consolas, monospace;
+  font-feature-settings: "tnum";
 }
+
+/* --- Tags --- */
 
 .share-tags {
   display: flex;
@@ -2797,12 +2896,15 @@ tbody tr.selected .select-col {
 }
 
 .share-tags span {
-  border: 1px solid rgba(95, 225, 255, 0.34);
-  background: rgba(95, 225, 255, 0.08);
+  border: 1px solid rgba(95, 225, 255, 0.3);
+  background: var(--share-accent-dim);
   color: #bdefff;
-  padding: 7px 10px;
-  font-size: 15px;
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 500;
 }
+
+/* --- Footer / Source --- */
 
 .share-footer {
   display: grid;
@@ -2814,31 +2916,47 @@ tbody tr.selected .select-col {
   min-width: 0;
 }
 
+.share-source-name {
+  color: #bccdd8;
+}
+
+.share-disclaimer {
+  color: #6d8a9a;
+  font-style: italic;
+}
+
 .share-footer code {
   justify-self: end;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #5fe1ff;
+  color: var(--share-accent);
   font: 700 13px ui-monospace, Consolas, monospace;
 }
+
+/* --- BOT READY hint --- */
 
 .share-ready-hint {
   margin: 0;
   width: 1200px;
   max-width: calc(100vw - 44px);
-  color: rgba(174, 196, 209, 0.78);
+  color: rgba(174, 196, 209, 0.72);
   font: 12px ui-monospace, Consolas, monospace;
 }
 
 .share-ready-hint code {
-  color: #5fe1ff;
+  color: var(--share-accent, #5fe1ff);
 }
 
+/* ========================================
+   Portrait layout (900×1400)
+   ======================================== */
+
 .share-card-portrait .share-card-inner {
-  padding: 54px 56px 44px;
-  gap: 28px;
+  padding: 50px 52px 40px;
+  gap: 22px;
+  grid-template-rows: auto auto 1fr auto auto auto;
 }
 
 .share-card-portrait .share-card-head {
@@ -2846,43 +2964,64 @@ tbody tr.selected .select-col {
 }
 
 .share-card-portrait .share-mark {
-  width: 78px;
-  height: 78px;
+  width: 74px;
+  height: 74px;
   grid-row: 1;
+  margin-bottom: 4px;
+  font-size: 26px;
 }
 
 .share-card-portrait h1 {
-  font-size: 58px;
+  font-size: 54px;
+}
+
+.share-card-portrait .share-subtitle {
+  font-size: 24px;
 }
 
 .share-card-portrait .share-summary {
-  font-size: 25px;
+  font-size: 24px;
+  line-height: 1.65;
 }
 
 .share-card-portrait .share-fields {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .share-card-portrait .share-field {
-  min-height: 132px;
-  padding: 18px;
+  min-height: 120px;
+  padding: 16px;
+}
+
+.share-card-portrait .share-field dt {
+  font-size: 15px;
 }
 
 .share-card-portrait .share-field dd {
-  font-size: 28px;
+  font-size: 26px;
+}
+
+.share-card-portrait .share-tags span {
+  font-size: 16px;
+  padding: 8px 12px;
 }
 
 .share-card-portrait .share-footer {
   grid-template-columns: 1fr;
   align-items: start;
-  font-size: 18px;
+  font-size: 17px;
+  gap: 7px;
 }
 
 .share-card-portrait .share-footer code {
   justify-self: start;
-  font-size: 15px;
+  font-size: 14px;
 }
+
+/* ========================================
+   Responsive scaling
+   ======================================== */
 
 @media (max-width: 900px) {
   .share-page {
