@@ -156,6 +156,12 @@ export function compactText(row, fields) {
     .toLowerCase()
 }
 
+const NUMERIC_FIELD_RE = /(价格|Cr|耐久|容量|射程|伤害|DPS|速度|质量|体积|吨位|船员|射速|弹数|管数|热量|冷却|散布|回复|范围|转向|加速度|寿命|AOE)/i
+
+export function isNumericField(field = '') {
+  return NUMERIC_FIELD_RE.test(field)
+}
+
 export function optionText(value) {
   return String(value ?? '').trim() || '未填写'
 }

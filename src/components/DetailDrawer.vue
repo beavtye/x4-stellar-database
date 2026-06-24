@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { formatValue } from '../utils/format'
+import { formatValue, isNumericField } from '../utils/format'
 import { buildDetailPresentation, rowSubtitle } from '../utils/detailPresentation'
 
 const props = defineProps({
@@ -19,6 +19,10 @@ const detail = computed(() => buildDetailPresentation(props.row, props.headers, 
 const subtitle = computed(() => rowSubtitle(props.row, props.subKey))
 const sourceLabel = computed(() => props.row?.__source || '')
 const sourceType = computed(() => props.row?.__source_type === 'mod' ? 'mod' : 'vanilla')
+
+function ddClass(field) {
+  return isNumericField(field) ? 'num' : ''
+}
 </script>
 
 <template>
@@ -43,13 +47,13 @@ const sourceType = computed(() => props.row?.__source_type === 'mod' ? 'mod' : '
           <dl class="detail-grid" :class="{ compact: section.compact }">
             <div v-for="item in section.items" :key="item.field" class="detail-item" :class="{ wide: item.wide }">
               <dt>{{ item.field }}</dt>
-              <dd>{{ item.value }}</dd>
+              <dd :class="ddClass(item.field)">{{ item.value }}</dd>
             </div>
           </dl>
         </section>
 
         <details v-if="detail.technicalItems.length" class="detail-tech">
-          <summary>技术信息 / 展开显示</summary>
+          <summary>技术信息（{{ detail.technicalItems.length }} 项）</summary>
           <dl class="detail-grid">
             <div v-for="item in detail.technicalItems" :key="item.field" class="detail-item wide tech">
               <dt>{{ item.field }}</dt>
