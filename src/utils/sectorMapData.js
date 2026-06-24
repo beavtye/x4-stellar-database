@@ -31,13 +31,17 @@ export function getSectorNode(id) {
 }
 
 function normalizeMapRecord(record) {
-  const fields = compactFields(record.fields)
-  const detailFields = compactFields((record.detailSections || []).flatMap((section) => section.fields || []))
-  const fieldMap = new Map([...fields, ...detailFields].map(([key, value]) => [key, value]))
+  const primaryFields = compactFields(record.fields)
+  const supplementFields = compactFields((record.detailSections || []).flatMap((section) => section.fields || []))
+  const allFields = [...primaryFields, ...supplementFields]
+  const fieldMap = new Map(allFields.map(([key, value]) => [key, value]))
   const tags = Array.isArray(record.tags) ? record.tags.filter(Boolean).map(String) : []
   const resources = Array.isArray(record.resources) ? record.resources.map(normalizeResource).filter(Boolean) : []
   const aliases = Array.isArray(record.aliases) ? record.aliases.filter(Boolean).map(String) : []
   const dlc = fieldMap.get('DLC') || ''
+
+  // Separate visible tags from internal ones
+  const visibleTags = tags.filter((tag) => !/^cluster_/i.test(tag) && !/macro/i.test(tag))
 
   return {
     id: String(record.id || record.title),
@@ -49,9 +53,10 @@ function normalizeMapRecord(record) {
     y: Number(record.map.y),
     mapWidth: Number(record.map.width) || 1680,
     mapHeight: Number(record.map.height) || 1165,
-    fields,
-    detailFields,
+    fields: primaryFields,
+    supplementFields,
     tags,
+    visibleTags,
     aliases,
     resources,
     dlc,

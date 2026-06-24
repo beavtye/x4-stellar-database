@@ -44,30 +44,35 @@ onMounted(() => {
   <main class="sector-map-page">
     <header class="sector-map-toolbar">
       <div class="sector-map-title">
-        <span>PHASE 3</span>
+        <span>星图索引</span>
         <h1>星区地图</h1>
-        <p>{{ mapStats.total }} 个星区 / {{ mapStats.clusters }} 个星系，基于 sectors.json 真实坐标。</p>
+        <p>{{ mapStats.total }} 个星区 · {{ mapStats.clusters }} 个星系 · 真实游戏坐标</p>
       </div>
 
       <form class="sector-map-search" @submit.prevent="submitSearch">
         <label>
-          <span>搜索星区</span>
-          <input v-model.trim="query" type="search" placeholder="输入星区名、星系名或别名" autocomplete="off" />
+          <span>搜索</span>
+          <input v-model.trim="query" type="search" placeholder="星区名 / 星系名 / 别名" autocomplete="off" />
         </label>
         <button type="submit" class="btn primary">定位</button>
       </form>
 
       <div class="sector-map-actions">
-        <a class="btn ghost" href="./">数据库</a>
-        <button type="button" class="btn" @click="resetMap">重置视图</button>
+        <a class="btn ghost" href="./">← 数据库</a>
+        <button type="button" class="btn" @click="resetMap">重置</button>
       </div>
     </header>
+
+    <div class="sector-map-hint">
+      拖拽平移 · 滚轮缩放 · 点击星区查看资料
+    </div>
 
     <section class="sector-map-layout">
       <aside class="sector-list-panel">
         <header class="map-panel-head">
-          <span>SECTORS</span>
-          <b>{{ filteredNodes.length }} / {{ mapStats.total }}</b>
+          <span>星区列表</span>
+          <b v-if="query">「{{ query }}」{{ filteredNodes.length }} 个</b>
+          <b v-else>{{ filteredNodes.length }} / {{ mapStats.total }}</b>
         </header>
         <div class="sector-list">
           <button
@@ -83,7 +88,7 @@ onMounted(() => {
               <b>{{ node.title }}</b>
               <small>{{ node.clusterTitle }}</small>
             </span>
-            <em v-if="node.resources.length">{{ node.resources.length }}</em>
+            <em v-if="node.hasResources">{{ node.resources.length }}</em>
           </button>
           <p v-if="!filteredNodes.length" class="sector-list-empty">没有匹配的星区。</p>
         </div>

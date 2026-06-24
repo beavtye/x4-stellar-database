@@ -30,6 +30,18 @@ const viewBox = computed(() => {
   return `${view.x} ${view.y} ${width} ${height}`
 })
 
+const gridMajor = computed(() => {
+  const step = 200
+  const lines = []
+  for (let x = 0; x <= mapBounds.width; x += step) {
+    lines.push({ x1: x, y1: 0, x2: x, y2: mapBounds.height })
+  }
+  for (let y = 0; y <= mapBounds.height; y += step) {
+    lines.push({ x1: 0, y1: y, x2: mapBounds.width, y2: y })
+  }
+  return lines
+})
+
 function nodeClass(node) {
   return {
     active: node.id === props.selectedId,
@@ -119,7 +131,7 @@ defineExpose({ resetView, focusNode })
 <template>
   <section class="sector-map-canvas-panel">
     <header class="map-panel-head">
-      <span>REAL COORDINATES</span>
+      <span>星图</span>
       <b>{{ nodes.length }} 个星区</b>
     </header>
 
@@ -138,20 +150,31 @@ defineExpose({ resetView, focusNode })
         @pointerleave="endDrag"
       >
         <defs>
-          <filter id="sectorNodeGlow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="5" result="glow" />
+          <filter id="sectorNodeGlow" x="-120%" y="-120%" width="340%" height="340%">
+            <feGaussianBlur stdDeviation="4.5" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <pattern id="sectorGrid" width="80" height="80" patternUnits="userSpaceOnUse">
-            <path d="M 80 0 L 0 0 0 80" class="sector-grid-line" />
+          <filter id="sectorNodeSelectedGlow" x="-120%" y="-120%" width="340%" height="340%">
+            <feGaussianBlur stdDeviation="6" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <pattern id="sectorGridMinor" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" class="sector-grid-line-minor" />
+          </pattern>
+          <pattern id="sectorGridMajor" width="200" height="200" patternUnits="userSpaceOnUse">
+            <rect width="200" height="200" fill="url(#sectorGridMinor)" />
+            <path d="M 200 0 L 0 0 0 200" class="sector-grid-line-major" />
           </pattern>
         </defs>
 
-        <rect :x="-mapBounds.padding" :y="-mapBounds.padding" :width="mapBounds.width + mapBounds.padding * 2" :height="mapBounds.height + mapBounds.padding * 2" class="sector-map-bg" />
-        <rect :x="0" :y="0" :width="mapBounds.width" :height="mapBounds.height" fill="url(#sectorGrid)" />
+        <rect class="sector-map-bg" :x="-mapBounds.padding" :y="-mapBounds.padding" :width="mapBounds.width + mapBounds.padding * 2" :height="mapBounds.height + mapBounds.padding * 2" />
+        <rect class="sector-map-grid" :x="0" :y="0" :width="mapBounds.width" :height="mapBounds.height" fill="url(#sectorGridMajor)" />
 
         <g class="sector-map-nodes">
           <g
@@ -168,22 +191,32 @@ defineExpose({ resetView, focusNode })
             @keydown.enter.prevent="selectNode(node)"
             @keydown.space.prevent="selectNode(node)"
           >
-            <title>{{ node.title }} / {{ node.clusterTitle }}</title>
-            <rect x="-34" y="-27" width="238" height="48" rx="8" class="sector-node-label-hit-area" />
-            <circle r="30" class="sector-node-hit-area" />
-            <circle r="14" class="sector-node-halo" />
-            <circle r="7" class="sector-node-core" />
-            <circle v-if="node.id === selectedId" r="24" class="sector-node-selected" />
-            <text x="18" y="-9">{{ node.title }}</text>
-            <text x="18" y="8" class="sector-node-cluster">{{ node.clusterTitle }}</text>
+            <title>{{ node.title }} · {{ node.clusterTitle }}</title>
+
+            <!-- Hit area -->
+            <circle r="34" class="sector-node-hit-area" />
+            <rect x="-40" y="-28" width="252" height="50" rx="8" class="sector-node-label-hit-area" />
+
+            <!-- Halo ring (always visible) -->
+            <circle r="15" class="sector-node-halo" />
+
+            <!-- Selected outer ring -->
+            <circle v-if="node.id === selectedId" r="28" class="sector-node-selected-ring" />
+
+            <!-- Core dot -->
+            <circle r="6" class="sector-node-core" />
+
+            <!-- Labels -->
+            <text x="20" y="-9">{{ node.title }}</text>
+            <text x="20" y="8" class="sector-node-cluster">{{ node.clusterTitle }}</text>
           </g>
         </g>
       </svg>
 
       <div class="sector-map-legend" aria-hidden="true">
         <span><i></i>星区</span>
-        <span class="rich"><i></i>有资源</span>
-        <span class="anomaly"><i></i>异常标签</span>
+        <span class="rich"><i></i>资源</span>
+        <span class="anomaly"><i></i>异常</span>
       </div>
     </div>
   </section>
