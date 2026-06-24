@@ -28,9 +28,9 @@ export async function parseX4DataFolder(fileList) {
   }
 
   const xmlDocs = readXmlDocs(texts)
-  const textMap = buildTextMap(xmlDocs)
-  const wares = buildWareIndex(xmlDocs, textMap)
-  const macros = buildMacroIndex(xmlDocs, textMap)
+  const textMaps = buildTextMaps(xmlDocs)
+  const wares = buildWareIndex(xmlDocs, textMaps)
+  const macros = buildMacroIndex(xmlDocs, textMaps)
   const bulletMacros = new Map([...macros.values()].filter((macro) => isBulletMacro(macro)).map((macro) => [macro.name, macro]))
   const rows = { ships: [], weapons: [], turrets: [], equipment: [] }
 
@@ -88,21 +88,42 @@ function readXmlDocs(texts) {
   return docs
 }
 
-function buildTextMap(xmlDocs) {
-  const map = new Map()
+function buildTextMaps(xmlDocs) {
+  const zhRanked = new Map()
+  const enRanked = new Map()
   for (const { path, doc } of xmlDocs) {
     if (!/(^|\/)t\//i.test(path)) continue
+    const zhPriority = textFilePriority(path, 'zh')
+    const enPriority = textFilePriority(path, 'en')
     for (const page of doc.querySelectorAll('page[id]')) {
       const pageId = page.getAttribute('id')
       for (const item of page.querySelectorAll('t[id]')) {
-        map.set(`${pageId}:${item.getAttribute('id')}`, textContent(item))
+        const key = `${pageId}:${item.getAttribute('id')}`
+        const value = textContent(item)
+        setRankedText(zhRanked, key, value, zhPriority)
+        setRankedText(enRanked, key, value, enPriority)
       }
     }
   }
+  return {
+    zh: rankedToMap(zhRanked),
+    en: rankedToMap(enRanked)
+  }
+}
+
+function setRankedText(map, key, value, priority) {
+  if (!priority || !value) return
+  const previous = map.get(key)
+  if (!previous || priority > previous.priority) map.set(key, { value, priority })
+}
+
+function rankedToMap(ranked) {
+  const map = new Map()
+  for (const [key, entry] of ranked.entries()) map.set(key, entry.value)
   return map
 }
 
-function buildWareIndex(xmlDocs, textMap) {
+function buildWareIndex(xmlDocs, textMaps) {
   const wares = new Map()
   for (const { doc } of xmlDocs) {
     for (const node of doc.querySelectorAll('ware[id]')) {
@@ -112,8 +133,10 @@ function buildWareIndex(xmlDocs, textMap) {
       const component = first(node, 'component[ref], component[macro], macro[ref]')
       const ware = {
         id,
-        name: resolveText(node.getAttribute('name') || node.getAttribute('basename'), textMap),
-        description: resolveText(node.getAttribute('description'), textMap),
+        zhName: resolveText(node.getAttribute('name') || node.getAttribute('basename'), textMaps.zh),
+        enName: resolveText(node.getAttribute('name') || node.getAttribute('basename'), textMaps.en),
+        zhDescription: resolveText(node.getAttribute('description'), textMaps.zh),
+        enDescription: resolveText(node.getAttribute('description'), textMaps.en),
         group: node.getAttribute('group') || '',
         tags: node.getAttribute('tags') || '',
         owner: node.getAttribute('owner') || node.getAttribute('race') || '',
@@ -133,7 +156,7 @@ function buildWareIndex(xmlDocs, textMap) {
   return wares
 }
 
-function buildMacroIndex(xmlDocs, textMap) {
+function buildMacroIndex(xmlDocs, textMaps) {
   const macros = new Map()
   for (const { path, doc } of xmlDocs) {
     for (const node of doc.querySelectorAll('macro[name]')) {
@@ -148,14 +171,18 @@ function buildMacroIndex(xmlDocs, textMap) {
       const ammunition = first(node, 'ammunition')
       const reload = first(node, 'reload')
       const heat = first(node, 'heat')
+      const rawName = ident?.getAttribute('name') || ident?.getAttribute('basename')
+      const rawDescription = ident?.getAttribute('description')
       macros.set(name, {
         name,
         className: node.getAttribute('class') || '',
         path,
         node,
         props,
-        nameText: resolveText(ident?.getAttribute('name') || ident?.getAttribute('basename'), textMap),
-        description: resolveText(ident?.getAttribute('description'), textMap),
+        zhName: resolveText(rawName, textMaps.zh),
+        enName: resolveText(rawName, textMaps.en),
+        zhDescription: resolveText(rawDescription, textMaps.zh),
+        enDescription: resolveText(rawDescription, textMaps.en),
         hull: numberAttr(hull, 'max') || numberAttr(props, 'hull'),
         storage: numberAttr(storage, 'cargo') || numberAttr(storage, 'unit') || numberAttr(storage, 'missile'),
         damage: numberAttr(damage, 'value'),
@@ -193,10 +220,11 @@ function findWareForMacro(wares, macro) {
 
 function shipRow(macro, ware) {
   const slots = countShipSlots(macro.connections)
+  const fallbackName = readableIdentifier(ware?.id || macro.name)
   return cleanRow({
     __uid: ware?.id || macro.name,
-    中文名: ware?.name || macro.nameText || macro.name,
-    英文名: macro.nameText || ware?.name || macro.name,
+    中文名: bestText(ware?.zhName, macro.zhName, ware?.enName, macro.enName, fallbackName),
+    英文名: bestText(ware?.enName, macro.enName, ware?.zhName, macro.zhName, fallbackName),
     种族: raceFromId(ware?.id || macro.name),
     势力: ware?.owner,
     尺寸: sizeFromText(macro.className || macro.name),
@@ -221,7 +249,7 @@ function shipRow(macro, ware) {
     'ware ID': ware?.id,
     '船只 macro': macro.name,
     建造材料: ware?.materials,
-    备注: macro.description
+    备注: bestText(macro.zhDescription, ware?.zhDescription, macro.enDescription, ware?.enDescription)
   })
 }
 
@@ -229,10 +257,11 @@ function weaponRow(macro, ware, bulletMacros) {
   const bullet = findBullet(macro, bulletMacros)
   const damage = firstNumber(macro.damage, bullet?.damage)
   const rate = firstNumber(macro.reloadRate, macro.ammoReload)
+  const fallbackName = readableIdentifier(ware?.id || macro.name)
   return cleanRow({
     __uid: ware?.id || macro.name,
-    中文名: ware?.name || macro.nameText || macro.name,
-    英文名: macro.nameText || ware?.name || macro.name,
+    中文名: bestText(ware?.zhName, macro.zhName, ware?.enName, macro.enName, fallbackName),
+    英文名: bestText(ware?.enName, macro.enName, ware?.zhName, macro.zhName, fallbackName),
     制造种族: raceFromId(ware?.id || macro.name),
     尺寸: sizeFromText(macro.className || macro.name),
     武器类型: weaponTypeLabel(macro.className || macro.name),
@@ -257,7 +286,7 @@ function weaponRow(macro, ware, bulletMacros) {
     '武器 macro': macro.name,
     '弹体 macro': bullet?.name || macro.bulletRefs[0],
     建造材料: ware?.materials,
-    备注: macro.description
+    备注: bestText(macro.zhDescription, ware?.zhDescription, macro.enDescription, ware?.enDescription)
   })
 }
 
@@ -265,10 +294,11 @@ function turretRow(macro, ware, bulletMacros) {
   const bullet = findBullet(macro, bulletMacros)
   const damage = firstNumber(macro.damage, bullet?.damage)
   const rate = firstNumber(macro.reloadRate, macro.ammoReload)
+  const fallbackName = readableIdentifier(ware?.id || macro.name)
   return cleanRow({
     __uid: ware?.id || macro.name,
-    中文名: ware?.name || macro.nameText || macro.name,
-    英文名: macro.nameText || ware?.name || macro.name,
+    中文名: bestText(ware?.zhName, macro.zhName, ware?.enName, macro.enName, fallbackName),
+    英文名: bestText(ware?.enName, macro.enName, ware?.zhName, macro.zhName, fallbackName),
     制造种族: raceFromId(ware?.id || macro.name),
     尺寸: sizeFromText(macro.className || macro.name),
     炮塔类型: weaponTypeLabel(macro.className || macro.name),
@@ -286,15 +316,16 @@ function turretRow(macro, ware, bulletMacros) {
     '炮塔 macro': macro.name,
     '弹体 macro': bullet?.name || macro.bulletRefs[0],
     建造材料: ware?.materials,
-    备注: macro.description
+    备注: bestText(macro.zhDescription, ware?.zhDescription, macro.enDescription, ware?.enDescription)
   })
 }
 
 function equipmentRow(macro, ware) {
+  const fallbackName = readableIdentifier(ware?.id || macro.name)
   return cleanRow({
     __uid: ware?.id || macro.name,
-    中文名: ware?.name || macro.nameText || macro.name,
-    英文名: macro.nameText || ware?.name || macro.name,
+    中文名: bestText(ware?.zhName, macro.zhName, ware?.enName, macro.enName, fallbackName),
+    英文名: bestText(ware?.enName, macro.enName, ware?.zhName, macro.zhName, fallbackName),
     制造种族: raceFromId(ware?.id || macro.name),
     尺寸: sizeFromText(macro.className || macro.name),
     装备类型: equipmentTypeLabel(macro.className || macro.name),
@@ -306,15 +337,16 @@ function equipmentRow(macro, ware) {
     'ware ID': ware?.id,
     '装备 macro': macro.name,
     建造材料: ware?.materials,
-    备注: macro.description
+    备注: bestText(macro.zhDescription, ware?.zhDescription, macro.enDescription, ware?.enDescription)
   })
 }
 
 function rowFromWareOnly(ware, dataset) {
+  const fallbackName = readableIdentifier(ware.id)
   const base = {
     __uid: ware.id,
-    中文名: ware.name || ware.id,
-    英文名: ware.name || ware.id,
+    中文名: bestText(ware.zhName, ware.enName, fallbackName),
+    英文名: bestText(ware.enName, ware.zhName, fallbackName),
     制造种族: raceFromId(ware.id),
     种族: raceFromId(ware.id),
     尺寸: sizeFromText(ware.id),
@@ -324,7 +356,7 @@ function rowFromWareOnly(ware, dataset) {
     '最高价格（Cr）': ware.maxPrice,
     'ware ID': ware.id,
     建造材料: ware.materials,
-    备注: ware.description
+    备注: bestText(ware.zhDescription, ware.enDescription)
   }
   if (dataset === 'ships') base['船级/类型'] = shipClassLabel(ware.id)
   if (dataset === 'weapons') base.武器类型 = weaponTypeLabel(ware.id)
@@ -366,23 +398,23 @@ function findBullet(macro, bulletMacros) {
 }
 
 function isShipMacro(macro) {
-  return /(^|_)ship|ship_/i.test(`${macro.className} ${macro.name} ${macro.path}`) && !/bullet|weapon|turret/i.test(macro.className)
+  return /(^|_)ship(_|$)|^ship_/i.test(`${macro.className} ${macro.name}`) && !/bullet|weapon|turret|storage/i.test(macro.className)
 }
 
 function isWeaponMacro(macro) {
-  return /weapon/i.test(`${macro.className} ${macro.name} ${macro.path}`) && !isTurretMacro(macro)
+  return /weapon/i.test(`${macro.className} ${macro.name}`) && !isTurretMacro(macro)
 }
 
 function isTurretMacro(macro) {
-  return /turret/i.test(`${macro.className} ${macro.name} ${macro.path}`)
+  return /turret/i.test(`${macro.className} ${macro.name}`)
 }
 
 function isBulletMacro(macro) {
-  return /bullet|ammunition|missile/i.test(`${macro.className} ${macro.name} ${macro.path}`)
+  return /bullet|ammunition|missile/i.test(`${macro.className} ${macro.name}`)
 }
 
 function isEquipmentMacro(macro) {
-  return /engine|shield|scanner|software|thruster|dock|module/i.test(`${macro.className} ${macro.name} ${macro.path}`) && !isShipMacro(macro)
+  return /engine|shield|scanner|software|thruster|dock|module/i.test(`${macro.className} ${macro.name}`) && !isShipMacro(macro)
 }
 
 function datasetFromWare(ware) {
@@ -407,12 +439,77 @@ function textContent(node) {
   return (node?.textContent || '').replace(/\s+/g, ' ').trim()
 }
 
-function resolveText(value, textMap) {
+function textFilePriority(path, locale) {
+  const normalized = String(path || '').toLowerCase()
+  if (locale === 'zh') {
+    if (/-l086\.xml$/.test(normalized)) return 100
+    if (/-l080\.xml$|-l081\.xml$|-l082\.xml$|-l088\.xml$/.test(normalized)) return 80
+    if (/-l044\.xml$|-l049\.xml$/.test(normalized)) return 50
+    if (/\/t\/[^/]+\.xml$/.test(normalized) && !/-l\d+\.xml$/.test(normalized)) return 40
+    return 10
+  }
+  if (/\/t\/[^/]+\.xml$/.test(normalized) && !/-l\d+\.xml$/.test(normalized)) return 100
+  if (/-l044\.xml$|-l049\.xml$|-l007\.xml$/.test(normalized)) return 90
+  if (/-l086\.xml$/.test(normalized)) return 5
+  return 20
+}
+
+function resolveText(value, textMap, depth = 0) {
   const raw = (value || '').trim()
   if (!raw) return ''
+  if (depth > 8) return cleanupResolvedText(raw)
   const ref = raw.match(/^\{(\d+),\s*(\d+)\}$/)
-  if (ref) return textMap.get(`${ref[1]}:${ref[2]}`) || raw
-  return raw.replace(/\{(\d+),\s*(\d+)\}/g, (_, page, id) => textMap.get(`${page}:${id}`) || `{${page},${id}}`)
+  if (ref) {
+    const resolved = textMap.get(`${ref[1]}:${ref[2]}`)
+    return resolved ? resolveText(resolved, textMap, depth + 1) : ''
+  }
+  const resolved = raw.replace(/\{(\d+),\s*(\d+)\}/g, (_, page, id) => {
+    const text = textMap.get(`${page}:${id}`)
+    return text ? resolveText(text, textMap, depth + 1) : ''
+  })
+  return cleanupResolvedText(resolved)
+}
+
+function cleanupResolvedText(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .trim()
+}
+
+function bestText(...values) {
+  return values.find((value) => {
+    const text = String(value || '').trim()
+    return text && !/\{\d+,\s*\d+\}/.test(text)
+  }) || ''
+}
+
+function readableIdentifier(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  const cleaned = raw
+    .replace(/_macro$/i, '')
+    .replace(/^ship_*/i, '')
+    .replace(/^weapon_*/i, '')
+    .replace(/^turret_*/i, '')
+    .replace(/^shield_*/i, '')
+    .replace(/^engine_*/i, '')
+    .replace(/^storage_*/i, '')
+    .replace(/^wares?_*/i, '')
+  const words = cleaned
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .filter((part) => !/^(macro|component|container|solid|liquid)$/.test(part.toLowerCase()))
+  if (!words.length) return raw
+  return words
+    .map((part) => {
+      const upper = part.toUpperCase()
+      if (/^(ARG|ANT|BOR|HAT|HOP|KHA|PAR|PIO|SCA|SPL|TEL|TER|XEN|YAK|XL|L|M|S|XS|MK\d+)$/.test(upper)) return upper
+      if (/^\d+$/.test(part)) return part
+      return part.slice(0, 1).toUpperCase() + part.slice(1)
+    })
+    .join(' ')
 }
 
 function first(node, selector) {
