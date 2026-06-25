@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>X4 星际数据库</title>
+    <script>
+      ;(() => {
+        try {
+          const theme = localStorage.getItem('x4_dashboard_theme_mode') || 'day'
+          document.documentElement.dataset.theme = theme
+        } catch {
+          document.documentElement.dataset.theme = 'day'
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

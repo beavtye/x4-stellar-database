@@ -2,6 +2,10 @@ export function reviewApiBase() {
   return import.meta.env.VITE_REVIEW_API_BASE || ''
 }
 
+export function hasReviewApi() {
+  return Boolean(reviewApiBase())
+}
+
 export async function postModPackage(payload) {
   const res = await fetch(`${reviewApiBase()}/api/mod-packages`, {
     method: 'POST',

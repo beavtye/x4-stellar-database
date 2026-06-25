@@ -126,18 +126,52 @@ function lookupCompactRecord(route, records, family) {
     (item.aliases || []).some((alias) => normalizeId(alias) === id)
   ))
   if (!row) return missingRecord(route, `未找到 ${TYPE_LABELS[family]}：${route.id}`)
+  const loreMeta = family === 'lore' ? buildLoreShareMeta(row, records) : null
   return {
     found: true,
     type: family,
-    label: row.label || TYPE_LABELS[family],
+    label: loreMeta?.label || row.label || TYPE_LABELS[family],
     id: row.id,
     title: safeText(row.title),
-    subtitle: safeText(row.subtitle || row.type),
+    subtitle: loreMeta?.subtitle || safeText(row.subtitle || row.type),
     summary: clampText(row.summary, family === 'lore' ? 120 : 150),
-    fields: compactFields(row.fields, family === 'lore' ? 5 : 6),
-    tags: (row.tags || []).slice(0, 4),
+    fields: loreMeta?.fields || compactFields(row.fields, family === 'lore' ? 5 : 6),
+    tags: loreMeta?.tags || (row.tags || []).slice(0, 4),
     source: 'X4 星际数据库',
     accentColor: TYPE_ACCENT[family] || TYPE_ACCENT.unknown
+  }
+}
+
+function buildLoreShareMeta(row, records) {
+  const fields = compactFields(row.fields, 5)
+  const ownerTitle = fieldFromList(row.fields, '所属档案')
+  const owner = ownerTitle
+    ? records.find((item) => item.type === 'lore' && (item.title === ownerTitle || item.id === ownerTitle))
+    : null
+  const anchor = anchorFromTarget(row.target) || row.id
+  const readerRoute = owner?.id
+    ? `#/lore?id=${encodeURIComponent(owner.id)}&anchor=${encodeURIComponent(anchor)}`
+    : ''
+  if (ownerTitle && !fields.some(([field]) => field === '所属档案')) fields.unshift(['所属档案', ownerTitle])
+  if (row.type !== 'lore' && !fields.some(([field]) => field === '条目类型')) {
+    fields.unshift(['条目类型', row.type === 'lore_box' ? '档案卡' : '正文小节'])
+  }
+  if (readerRoute) fields.push(['阅读入口', readerRoute])
+  return {
+    label: row.type === 'lore'
+      ? '编年史档案'
+      : row.type === 'lore_box'
+        ? '编年史档案卡'
+        : '编年史正文',
+    subtitle: row.type === 'lore'
+      ? safeText(row.subtitle || row.type)
+      : safeText(`${ownerTitle || '编年史'} / ${row.subtitle || row.type}`),
+    fields: fields.slice(0, 6),
+    tags: [
+      row.type === 'lore_box' ? '档案卡' : row.type === 'lore_section' ? '正文小节' : '章节',
+      ownerTitle,
+      ...(row.tags || [])
+    ].filter(Boolean).slice(0, 4)
   }
 }
 
@@ -180,6 +214,16 @@ function compactFields(fields = [], limit = 6) {
     )
     .slice(0, limit)
     .map(([field, value]) => [field, formatValue(value, field)])
+}
+
+function fieldFromList(fields = [], name) {
+  const match = fields.find(([field]) => String(field) === name)
+  return match ? String(match[1] || '').trim() : ''
+}
+
+function anchorFromTarget(target) {
+  const text = String(target || '')
+  return text.includes('#') ? text.slice(text.indexOf('#') + 1) : ''
 }
 
 function buildSubtitle(row, fields) {

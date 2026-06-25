@@ -270,7 +270,11 @@ function removeRawLink(index) {
   <div class="modal-backdrop" :class="{ open }" @click="$emit('close')"></div>
   <section class="modal" :class="{ open }">
     <header class="modal-head">
-      <h3>导入 mod 数据</h3>
+      <div>
+        <span>MOD PACKAGE INTAKE</span>
+        <h3>导入 mod 数据</h3>
+        <p>支持自动识别、整理文件、小型原始文件和大包链接提交审核。</p>
+      </div>
       <button type="button" class="icon-toggle" @click="$emit('close')">×</button>
     </header>
     <div class="modal-body import-body">

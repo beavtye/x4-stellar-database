@@ -5,6 +5,7 @@ dist/
 .env.*
 !.env.example
 *.log
+.qa-screenshots/
 *.sqlite3
 *.db
 .x4_*

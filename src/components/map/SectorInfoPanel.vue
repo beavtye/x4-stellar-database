@@ -1,99 +1,121 @@
 <script setup>
 import { computed } from 'vue'
+import { getAtlasClusterSectors } from '../../utils/sectorMapData'
 
 const props = defineProps({
-  node: { type: Object, default: null }
+  node: { type: Object, default: null },
+  stats: { type: Object, default: () => ({}) },
+  open: { type: Boolean, default: true }
 })
-
-const playerFields = computed(() => {
-  if (!props.node?.fields) return []
-  return props.node.fields
-})
-
-const supplementFields = computed(() => {
-  if (!props.node?.supplementFields) return []
-  // Only show supplement fields that are NOT already in playerFields
-  const seen = new Set((props.node.fields || []).map(([k]) => k))
-  return props.node.supplementFields.filter(([k]) => !seen.has(k)).slice(0, 12)
-})
+const emit = defineEmits(['toggle-open', 'select-sector'])
 
 const resources = computed(() => {
   if (!props.node?.resources) return []
-  return props.node.resources.filter((r) => r.yield > 0).slice(0, 8)
+  return props.node.resources.filter((item) => item.yield > 0).slice(0, 8)
 })
-
-const tags = computed(() => {
-  if (!props.node?.visibleTags) return (props.node?.tags || []).slice(0, 10)
-  return props.node.visibleTags.slice(0, 10)
+const siblingSectors = computed(() => {
+  return getAtlasClusterSectors(props.node).filter((sector) => sector.id !== props.node?.id)
+})
+const conditionRows = computed(() => {
+  if (!props.node) return []
+  return [
+    ['DLC', props.node.dlcLabel],
+    ['星图编码', props.node.code],
+    ['日照倍率', formatMaybeNumber(props.node.sunlight)],
+    ['经济热度', formatMaybeNumber(props.node.economy)],
+    ['安全指数', formatMaybeNumber(props.node.security)],
+    ['资源种类', resources.value.length ? `${resources.value.length} 类` : '暂无记录']
+  ].filter(([, value]) => value !== undefined && value !== null && value !== '')
 })
 
 function formatNumber(value) {
   const number = Number(value)
   return Number.isFinite(number) ? number.toLocaleString('zh-CN') : value
 }
+
+function formatMaybeNumber(value) {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return '—'
+  return Number.isInteger(number) ? String(number) : number.toFixed(2)
+}
+
+function openShare() {
+  if (!props.node?.id) return
+  window.open(`#/share?type=sector&id=${encodeURIComponent(props.node.id)}`, '_blank', 'noopener')
+}
 </script>
 
 <template>
-  <aside class="sector-info-panel">
-    <header class="map-panel-head">
-      <span>星区资料</span>
-      <b>{{ node ? node.title : '—' }}</b>
-    </header>
-
-    <div v-if="node" class="sector-info-body">
-      <!-- Hero: cluster + name + DLC + description -->
-      <section class="sector-info-hero">
-        <div class="sector-info-hero-top">
-          <span>{{ node.clusterTitle }}</span>
-          <em v-if="node.dlc" class="sector-dlc-badge">{{ node.dlc }}</em>
-        </div>
-        <h2>{{ node.title }}</h2>
-        <p v-if="node.summary && node.summary !== '暂无描述。'">{{ node.summary }}</p>
-      </section>
-
-      <!-- Player fields (primary stats) -->
-      <dl v-if="playerFields.length" class="sector-field-list">
-        <div v-for="[field, value] in playerFields" :key="field">
-          <dt>{{ field }}</dt>
-          <dd>{{ value }}</dd>
-        </div>
-      </dl>
-
-      <!-- Resources -->
-      <section v-if="resources.length" class="sector-resource-section">
-        <h3>资源产出</h3>
-        <div class="sector-resource-grid">
-          <article v-for="resource in resources" :key="resource.ware || resource.label" class="sector-resource">
-            <b>{{ resource.label }}</b>
-            <small>{{ resource.areas }} 片 / {{ resource.amount }} 处</small>
-            <strong>{{ formatNumber(resource.yield) }}</strong>
-          </article>
-        </div>
-      </section>
-
-      <!-- Tags -->
-      <section v-if="tags.length" class="sector-tag-section">
-        <h3>标签</h3>
-        <div class="sector-tag-row">
-          <span v-for="tag in tags" :key="tag">{{ tag }}</span>
-        </div>
-      </section>
-
-      <!-- Supplement fields (internal, subdued) -->
-      <details v-if="supplementFields.length" class="sector-supplement-details">
-        <summary>详细数据（{{ supplementFields.length }} 项）</summary>
-        <dl class="sector-field-list sector-field-list-supplement">
-          <div v-for="[field, value] in supplementFields" :key="field">
-            <dt>{{ field }}</dt>
-            <dd>{{ value }}</dd>
-          </div>
-        </dl>
-      </details>
+  <aside class="map-panel-v4 map-detail-panel-v4" :class="{ collapsed: !open }">
+    <div class="map-panel-head-v4 dossier-head-v4">
+      <span>当前档案</span>
+      <b>{{ open ? (node ? node.title : '未选择星区') : '收起详情' }}</b>
+      <button v-if="open" type="button" class="x4-map-share-btn" :disabled="!node" @click="openShare">分享</button>
+      <button type="button" class="detail-toggle-v4" :title="open ? '收起详情' : '展开详情'" @click="emit('toggle-open')">
+        {{ open ? '‹' : '展开' }}
+      </button>
     </div>
 
-    <div v-else class="sector-info-empty">
-      <strong>选择一个星区</strong>
-      <p>点击地图节点或左侧列表查看资料。</p>
+    <div v-if="node && open" class="map-detail-v4">
+      <section class="detail-hero-v4 dossier-hero-v4">
+        <div class="detail-cover-v4 dossier-cover-v4">
+          <div class="dossier-cover-grid"></div>
+          <strong>{{ node.dlcShort }}</strong>
+        </div>
+        <div class="detail-main-v4">
+          <div class="detail-kicker-v4">{{ node.clusterTitle }}</div>
+          <h2>{{ node.title }}</h2>
+          <p class="detail-desc-v4">{{ node.summary }}</p>
+          <div class="detail-meta-v4">
+            <span>{{ node.dlcLabel }}</span>
+            <span>{{ node.code }}</span>
+            <span>{{ stats.total || 145 }} 星区</span>
+            <span>{{ stats.edges || 146 }} 星门连接</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="overview-v4">
+        <div class="detail-kicker-v4">OVERVIEW</div>
+        <h3>星区概览</h3>
+        <p>{{ node.excerpt || node.summary }}</p>
+      </section>
+
+      <section class="condition-grid-v4">
+        <article v-for="[label, value] in conditionRows" :key="label">
+          <small>{{ label }}</small>
+          <b>{{ value }}</b>
+        </article>
+      </section>
+
+      <section v-if="resources.length" class="resource-grid-v4">
+        <article v-for="resource in resources" :key="resource.ware" class="resource-card-v4">
+          <small>{{ resource.areas }} 片 / {{ resource.amount }} 处</small>
+          <b>{{ resource.label }}</b>
+          <strong>{{ formatNumber(resource.yield) }}</strong>
+        </article>
+      </section>
+
+      <section v-if="siblingSectors.length" class="system-list-v4">
+        <button
+          v-for="sector in siblingSectors"
+          :key="sector.id"
+          type="button"
+          class="system-card-v4"
+          @click="emit('select-sector', sector)"
+        >
+          <b>{{ sector.title }}</b>
+          <small>{{ sector.fullName }}</small>
+          <div>
+            <span>{{ sector.dlcShort }}</span>
+            <span v-if="sector.resources.length">{{ sector.resources.length }} 类资源</span>
+          </div>
+        </button>
+      </section>
+    </div>
+
+    <div v-else-if="open" class="map-empty-v4">
+      选择一个星区以展开档案。
     </div>
   </aside>
 </template>

@@ -87,7 +87,13 @@ export function buildDetailPresentation(row, headers, options = {}) {
   }
 
   const sections = [...buckets.values()].filter((section) => section.items.length)
-  if (priceItems.length) sections.push({ title: '价格', items: priceItems, compact: true })
+  if (priceItems.length) {
+    sections.push({
+      title: '价格',
+      items: priceItems.map((item) => ({ ...item, wide: priceItems.length === 1 })),
+      compact: true
+    })
+  }
   if (materialItems.length) sections.push({ title: '建造材料', items: materialItems })
   if (otherItems.length) sections.push({ title: '其他资料', items: otherItems })
 
@@ -114,5 +120,5 @@ function isTechnicalField(field) {
 }
 
 function shouldBeWide(field, value) {
-  return /备注|说明|关键参数|描述|材料|资源/.test(field) || String(value).length > 42
+  return /备注|说明|关键参数|描述|材料|资源|生产方式/.test(field) || String(value).length > 42
 }

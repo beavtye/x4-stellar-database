@@ -39,6 +39,8 @@ defineEmits(['jump', 'select-result'])
           :key="section.id"
           type="button"
           :class="{ active: activeAnchor === section.anchor }"
+          :data-lore-index-slot="section.slotId"
+          :data-render-kind="section.renderKind"
           @click="$emit('jump', section.anchor)"
         >
           <span>{{ section.title }}</span>
@@ -51,6 +53,8 @@ defineEmits(['jump', 'select-result'])
           :key="card.id"
           type="button"
           :class="{ active: activeAnchor === card.anchor, 'lore-index-card-btn': true }"
+          :data-lore-index-slot="card.slotId"
+          :data-render-kind="card.renderKind"
           @click="$emit('jump', card.anchor)"
         >
           <small>{{ card.title }}</small>

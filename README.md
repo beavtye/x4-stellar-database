@@ -1,17 +1,19 @@
 # X4 星际数据库 Vue3 迁移版
 
-这是 X4: Foundations 中文玩家数据库的 Vue3 迁移版。基础页面迁移已完成，旧版纯 HTML 保存在 `public/legacy/`，欢迎提交数据修正、字段补全和后续优化 PR。
+这是 X4: Foundations 中文玩家数据库的 Vue3 迁移版。当前采用“默认入口保留旧版精确体验，Vue3 页面分阶段替换”的迁移策略；旧版纯 HTML 保存在 `public/legacy/`，欢迎提交数据修正、字段补全和后续优化 PR。
 
 这是从旧版单文件 HTML/CSS/JS 迁移出的 Vue3 + Vite 工程。目标是让数据、界面、协作流程分层，方便后续放到 GitHub 多人维护。
 
 ## 当前状态
 
-五个主要页面已完成基础迁移：
+当前页面状态：
 
-- 核心数据库（`#/`）：舰船、武器、炮塔、装备的浏览、搜索、筛选、对比、导入/导出
+- 核心数据库（`#/`）：默认回挂 legacy exact，保证首页数据库和旧版 HTML 视觉、布局、交互一致
+- 核心数据库 Vue 预览（`#/database-vue`）：用于继续组件化迁移、复刻旧版体验
 - 分享卡（`#/share`）：可分享数据卡片，支持类型与 ID 参数
-- 星区地图（`#/map`）：星系搜索、点击资料面板、缩放拖动
-- 编年史（`#/lore`）：章节导航、搜索、目录与正文阅读
+- 星区地图（`#/map`）：默认回挂 legacy exact，并自动进入旧版真实星图
+- 星区地图 Vue 预览（`#/map-vue`）：用于继续复刻旧版真实星图、资源排行和详情面板
+- 编年史（`#/lore`）：章节导航、搜索、目录与正文阅读；当前先保证能稳定阅读，后续再按章节/卡片逐步定制视觉组件
 - Benchmark（`#/benchmark`）：数值标杆选择、多选对比、曲线、mod 参数、推荐材料、XML 导出
 
 后续迁移阶段见 `docs/MIGRATION_PLAN.md`。
@@ -115,6 +117,8 @@ npm run preview
 
 ```text
 #/map
+#/database-vue
+#/map-vue
 #/lore
 #/benchmark
 #/share?type=ship&id=ship_arg_l_destroyer_01_a

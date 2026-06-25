@@ -13,10 +13,15 @@ export function parseLoreRoute(locationLike = window.location) {
     : (locationLike.search || '').replace(/^\?/, '')
   const params = new URLSearchParams(rawQuery)
   return {
-    id: String(params.get('id') || '').trim()
+    id: String(params.get('id') || '').trim(),
+    anchor: String(params.get('anchor') || '').trim()
   }
 }
 
-export function loreRouteHref(id) {
-  return `#/lore${id ? `?id=${encodeURIComponent(id)}` : ''}`
+export function loreRouteHref(id, anchor = '') {
+  const params = new URLSearchParams()
+  if (id) params.set('id', id)
+  if (anchor) params.set('anchor', anchor)
+  const query = params.toString()
+  return `#/lore${query ? `?${query}` : ''}`
 }

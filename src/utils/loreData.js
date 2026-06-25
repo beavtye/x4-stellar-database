@@ -1,4 +1,5 @@
 import lore from '../data/lore.json'
+import { timelineEvents } from './loreTimeline'
 
 const records = lore.records || []
 const chapterRecords = records.filter((record) => record.type === 'lore')
@@ -22,7 +23,17 @@ for (const chapter of loreChapters) {
   chapter.cards = boxRecords
     .filter((record) => chapterTitleToId.get(fieldValue(record, '所属档案')) === chapter.id)
     .map(normalizeCard)
+  if (chapter.id === 'timeline') {
+    chapter.sections = timelineEvents.map((event) => ({
+      ...event,
+      title: event.title,
+      summary: event.summary
+    }))
+  }
+  applyChapterSlots(chapter)
 }
+
+export const loreCustomSlots = buildLoreCustomSlots(loreChapters)
 
 export function getLoreChapter(id) {
   if (!id) return loreChapters[0] || null
@@ -121,6 +132,86 @@ function normalizeEntry(record, fallbackType) {
       ...aliases,
       ...toStringList(record.tags)
     ].join(' '))
+  }
+}
+
+function applyChapterSlots(chapter) {
+  chapter.slotId = `lore:${chapter.id}:chapter`
+  chapter.renderKind = chapter.id === 'timeline'
+    ? 'chapter-timeline'
+    : chapter.id === 'conflict-index'
+      ? 'chapter-conflict-index'
+      : 'chapter-standard'
+  chapter.customComponentKey = `lore.${chapter.id}.chapter`
+  chapter.customizable = true
+
+  chapter.sections = chapter.sections.map((entry, index) => applyEntrySlot(chapter, entry, 'section', index))
+  chapter.cards = chapter.cards.map((entry, index) => applyEntrySlot(chapter, entry, 'card', index))
+}
+
+function applyEntrySlot(chapter, entry, kind, index) {
+  const slotId = `lore:${chapter.id}:${kind}:${entry.id}`
+  const renderKind = kind === 'section'
+    ? sectionRenderKind(chapter, entry)
+    : cardRenderKind(chapter, entry)
+  return {
+    ...entry,
+    slotId,
+    slotIndex: index,
+    renderKind,
+    customComponentKey: `lore.${chapter.id}.${kind}.${entry.id}`,
+    parentChapterId: chapter.id,
+    customizable: true
+  }
+}
+
+function sectionRenderKind(chapter, entry) {
+  if (chapter.id === 'timeline') return 'timeline-node'
+  const text = `${entry.title} ${entry.subtitle} ${entry.summary} ${entry.tags.join(' ')}`.toLowerCase()
+  if (/年表|timeline|纪年|阶段/.test(text)) return 'section-timeline'
+  if (/冲突|战争|战役|断裂|危机/.test(text)) return 'section-conflict'
+  if (/误区|边界|口径|不能/.test(text)) return 'section-boundary'
+  return 'section-standard'
+}
+
+function cardRenderKind(chapter, entry) {
+  if (chapter.id === 'conflict-index') return 'card-conflict-index'
+  const type = fieldValue(entry, '类型') || entry.subtitle || ''
+  const text = `${entry.title} ${type} ${entry.summary} ${entry.tags.join(' ')}`.toLowerCase()
+  if (/入稿摘录|excerpt|摘录/.test(text)) return 'card-excerpt'
+  if (/faction|派系|势力/.test(text)) return 'card-faction'
+  if (/timeline|时间|纪年|年表/.test(text)) return 'card-timeline'
+  if (/boundary|边界|误区|口径|待核/.test(text)) return 'card-boundary'
+  if (/conflict|冲突|战争|战役|惨案|危机/.test(text)) return 'card-conflict'
+  return 'card-standard'
+}
+
+function buildLoreCustomSlots(chapters) {
+  return chapters.flatMap((chapter) => [
+    {
+      slotId: chapter.slotId,
+      chapterId: chapter.id,
+      entryId: chapter.id,
+      entryType: 'chapter',
+      renderKind: chapter.renderKind,
+      customComponentKey: chapter.customComponentKey,
+      title: chapter.title
+    },
+    ...chapter.sections.map((entry) => slotManifestEntry(chapter, entry, 'section')),
+    ...chapter.cards.map((entry) => slotManifestEntry(chapter, entry, 'card'))
+  ])
+}
+
+function slotManifestEntry(chapter, entry, entryType) {
+  return {
+    slotId: entry.slotId,
+    chapterId: chapter.id,
+    entryId: entry.id,
+    entryType,
+    renderKind: entry.renderKind,
+    customComponentKey: entry.customComponentKey,
+    title: entry.title,
+    anchor: entry.anchor
   }
 }
 

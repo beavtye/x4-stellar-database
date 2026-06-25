@@ -1,9 +1,10 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { mapBounds } from '../../utils/sectorMapData'
+import { atlasEdges, atlasMapBounds, atlasMeta } from '../../utils/sectorMapData'
 
 const props = defineProps({
   nodes: { type: Array, required: true },
+  visibleIds: { type: Object, required: true },
   selectedId: { type: String, default: '' }
 })
 
@@ -11,8 +12,8 @@ const emit = defineEmits(['select'])
 
 const svgRef = ref(null)
 const view = reactive({
-  x: mapBounds.x,
-  y: mapBounds.y,
+  x: atlasMapBounds.x,
+  y: atlasMapBounds.y,
   scale: 1
 })
 const drag = reactive({
@@ -25,56 +26,83 @@ const drag = reactive({
 })
 
 const viewBox = computed(() => {
-  const width = mapBounds.width / view.scale
-  const height = mapBounds.height / view.scale
+  const width = atlasMapBounds.width / view.scale
+  const height = atlasMapBounds.height / view.scale
   return `${view.x} ${view.y} ${width} ${height}`
 })
-
-const gridMajor = computed(() => {
-  const step = 200
-  const lines = []
-  for (let x = 0; x <= mapBounds.width; x += step) {
-    lines.push({ x1: x, y1: 0, x2: x, y2: mapBounds.height })
-  }
-  for (let y = 0; y <= mapBounds.height; y += step) {
-    lines.push({ x1: 0, y1: y, x2: mapBounds.width, y2: y })
-  }
-  return lines
+const hexRadius = computed(() => Number(atlasMeta.hexRadius) || 28)
+const background = computed(() => atlasMeta.svgCoordinateTransform?.background || {
+  x: 0,
+  y: 0,
+  width: atlasMapBounds.width,
+  height: atlasMapBounds.height
 })
+const selectedNode = computed(() => props.nodes.find((node) => node.id === props.selectedId) || null)
+const activeClusterId = computed(() => selectedNode.value?.clusterId || '')
+
+function hexPoints(node, radius = hexRadius.value) {
+  const points = []
+  for (let i = 0; i < 6; i += 1) {
+    const angle = Math.PI / 6 + i * Math.PI / 3
+    points.push(`${(node.x + Math.cos(angle) * radius).toFixed(2)},${(node.y + Math.sin(angle) * radius).toFixed(2)}`)
+  }
+  return points.join(' ')
+}
 
 function nodeClass(node) {
   return {
     active: node.id === props.selectedId,
     rich: node.hasResources,
-    anomaly: node.hasAnomaly
+    dim: !props.visibleIds.has(node.id),
+    dlc: node.dlc !== 'base'
   }
+}
+
+function edgeClass(edge) {
+  return {
+    active: edge.a === props.selectedId ||
+      edge.b === props.selectedId ||
+      (edge.source?.clusterId && edge.source.clusterId === activeClusterId.value && edge.target?.clusterId === activeClusterId.value)
+  }
+}
+
+function resourceShort(node) {
+  return node.resources.slice(0, 2).map((item) => item.label).join(' / ')
 }
 
 function resetView() {
   view.scale = 1
-  view.x = mapBounds.x
-  view.y = mapBounds.y
+  view.x = atlasMapBounds.x
+  view.y = atlasMapBounds.y
+}
+
+function zoomBy(multiplier) {
+  const nextScale = clamp(view.scale * multiplier, 0.72, 4.2)
+  const centerX = view.x + atlasMapBounds.width / view.scale / 2
+  const centerY = view.y + atlasMapBounds.height / view.scale / 2
+  view.scale = nextScale
+  clampToMap(centerX - atlasMapBounds.width / view.scale / 2, centerY - atlasMapBounds.height / view.scale / 2)
 }
 
 function focusNode(node) {
   if (!node) return
   view.scale = Math.max(view.scale, 2.35)
-  clampToMap(node.x - mapBounds.width / view.scale / 2, node.y - mapBounds.height / view.scale / 2)
+  clampToMap(node.x - atlasMapBounds.width / view.scale / 2, node.y - atlasMapBounds.height / view.scale / 2)
 }
 
 function onWheel(event) {
   event.preventDefault()
   const rect = svgRef.value?.getBoundingClientRect()
   if (!rect) return
-  const currentWidth = mapBounds.width / view.scale
-  const currentHeight = mapBounds.height / view.scale
+  const currentWidth = atlasMapBounds.width / view.scale
+  const currentHeight = atlasMapBounds.height / view.scale
   const px = (event.clientX - rect.left) / rect.width
   const py = (event.clientY - rect.top) / rect.height
   const worldX = view.x + currentWidth * px
   const worldY = view.y + currentHeight * py
   const nextScale = clamp(view.scale * (event.deltaY > 0 ? 0.88 : 1.14), 0.72, 4.2)
-  const nextWidth = mapBounds.width / nextScale
-  const nextHeight = mapBounds.height / nextScale
+  const nextWidth = atlasMapBounds.width / nextScale
+  const nextHeight = atlasMapBounds.height / nextScale
   view.scale = nextScale
   clampToMap(worldX - nextWidth * px, worldY - nextHeight * py)
 }
@@ -94,8 +122,8 @@ function moveDrag(event) {
   if (!drag.active || drag.pointerId !== event.pointerId) return
   const rect = svgRef.value?.getBoundingClientRect()
   if (!rect) return
-  const width = mapBounds.width / view.scale
-  const height = mapBounds.height / view.scale
+  const width = atlasMapBounds.width / view.scale
+  const height = atlasMapBounds.height / view.scale
   const dx = (event.clientX - drag.x) / rect.width * width
   const dy = (event.clientY - drag.y) / rect.height * height
   clampToMap(drag.viewX - dx, drag.viewY - dy)
@@ -108,16 +136,12 @@ function endDrag(event) {
   svgRef.value?.releasePointerCapture(event.pointerId)
 }
 
-function selectNode(node) {
-  emit('select', node)
-}
-
 function clampToMap(nextX, nextY) {
-  const width = mapBounds.width / view.scale
-  const height = mapBounds.height / view.scale
-  const padding = mapBounds.padding
-  view.x = clamp(nextX, -padding, mapBounds.width - width + padding)
-  view.y = clamp(nextY, -padding, mapBounds.height - height + padding)
+  const width = atlasMapBounds.width / view.scale
+  const height = atlasMapBounds.height / view.scale
+  const padding = atlasMapBounds.padding
+  view.x = clamp(nextX, -padding, atlasMapBounds.width - width + padding)
+  view.y = clamp(nextY, -padding, atlasMapBounds.height - height + padding)
 }
 
 function clamp(value, min, max) {
@@ -125,23 +149,18 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
 }
 
-defineExpose({ resetView, focusNode })
+defineExpose({ resetView, focusNode, zoomBy })
 </script>
 
 <template>
-  <section class="sector-map-canvas-panel">
-    <header class="map-panel-head">
-      <span>星图</span>
-      <b>{{ nodes.length }} 个星区</b>
-    </header>
-
-    <div class="sector-map-canvas-wrap">
+  <section class="map-panel-v4">
+    <div class="map-canvas-v4">
       <svg
         ref="svgRef"
-        class="sector-map-svg"
+        class="map-svg-v4"
         :viewBox="viewBox"
         role="img"
-        aria-label="X4 星区地图"
+        aria-label="X4 可游玩星区地图"
         @wheel="onWheel"
         @pointerdown="startDrag"
         @pointermove="moveDrag"
@@ -150,73 +169,72 @@ defineExpose({ resetView, focusNode })
         @pointerleave="endDrag"
       >
         <defs>
-          <filter id="sectorNodeGlow" x="-120%" y="-120%" width="340%" height="340%">
-            <feGaussianBlur stdDeviation="4.5" result="glow" />
+          <filter id="v4Glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="3.5" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <filter id="sectorNodeSelectedGlow" x="-120%" y="-120%" width="340%" height="340%">
-            <feGaussianBlur stdDeviation="6" result="glow" />
-            <feMerge>
-              <feMergeNode in="glow" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <pattern id="sectorGridMinor" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" class="sector-grid-line-minor" />
-          </pattern>
-          <pattern id="sectorGridMajor" width="200" height="200" patternUnits="userSpaceOnUse">
-            <rect width="200" height="200" fill="url(#sectorGridMinor)" />
-            <path d="M 200 0 L 0 0 0 200" class="sector-grid-line-major" />
+          <pattern id="v4Grid" width="36" height="36" patternUnits="userSpaceOnUse">
+            <path d="M 36 0 L 0 0 0 36" class="v4-grid" />
           </pattern>
         </defs>
 
-        <rect class="sector-map-bg" :x="-mapBounds.padding" :y="-mapBounds.padding" :width="mapBounds.width + mapBounds.padding * 2" :height="mapBounds.height + mapBounds.padding * 2" />
-        <rect class="sector-map-grid" :x="0" :y="0" :width="mapBounds.width" :height="mapBounds.height" fill="url(#sectorGridMajor)" />
+        <rect :x="-atlasMapBounds.padding" :y="-atlasMapBounds.padding" :width="atlasMapBounds.width + atlasMapBounds.padding * 2" :height="atlasMapBounds.height + atlasMapBounds.padding * 2" fill="url(#v4Grid)" />
+        <image
+          v-if="atlasMeta.shapeSvgPath || atlasMeta.shapeSvgDataUri"
+          class="v4-real-map-bg"
+          :href="atlasMeta.shapeSvgPath || atlasMeta.shapeSvgDataUri"
+          :x="background.x"
+          :y="background.y"
+          :width="background.width"
+          :height="background.height"
+          preserveAspectRatio="none"
+        />
 
-        <g class="sector-map-nodes">
+        <g class="v4-gates">
+          <line
+            v-for="edge in atlasEdges"
+            :key="`${edge.a}-${edge.b}`"
+            class="v4-gate"
+            :class="edgeClass(edge)"
+            :x1="edge.source.x"
+            :y1="edge.source.y"
+            :x2="edge.target.x"
+            :y2="edge.target.y"
+          />
+        </g>
+
+        <g class="v4-sectors">
           <g
             v-for="node in nodes"
             :key="node.id"
-            class="sector-map-node"
+            class="v4-sector"
             :class="nodeClass(node)"
-            :transform="`translate(${node.x} ${node.y})`"
             tabindex="0"
             role="button"
             :aria-label="node.title"
             @pointerdown.stop
-            @click.stop="selectNode(node)"
-            @keydown.enter.prevent="selectNode(node)"
-            @keydown.space.prevent="selectNode(node)"
+            @click.stop="emit('select', node)"
+            @keydown.enter.prevent="emit('select', node)"
+            @keydown.space.prevent="emit('select', node)"
           >
-            <title>{{ node.title }} · {{ node.clusterTitle }}</title>
-
-            <!-- Hit area -->
-            <circle r="34" class="sector-node-hit-area" />
-            <rect x="-40" y="-28" width="252" height="50" rx="8" class="sector-node-label-hit-area" />
-
-            <!-- Halo ring (always visible) -->
-            <circle r="15" class="sector-node-halo" />
-
-            <!-- Selected outer ring -->
-            <circle v-if="node.id === selectedId" r="28" class="sector-node-selected-ring" />
-
-            <!-- Core dot -->
-            <circle r="6" class="sector-node-core" />
-
-            <!-- Labels -->
-            <text x="20" y="-9">{{ node.title }}</text>
-            <text x="20" y="8" class="sector-node-cluster">{{ node.clusterTitle }}</text>
+            <title>{{ node.fullName }} · {{ node.clusterTitle }}</title>
+            <polygon :points="hexPoints(node)" />
+            <circle v-if="node.id === selectedId" class="v4-select-ring" :cx="node.x" :cy="node.y" :r="hexRadius + 8" />
+            <text class="sector-name" :x="node.labelX" :y="node.labelY">{{ node.title }}</text>
+            <text class="sector-code" :x="node.labelX" :y="node.labelY + 5.8">{{ node.code }}</text>
+            <text v-if="node.hasResources" class="sector-res" :x="node.labelX" :y="node.labelY + 11">{{ resourceShort(node) }}</text>
           </g>
         </g>
       </svg>
 
-      <div class="sector-map-legend" aria-hidden="true">
-        <span><i></i>星区</span>
-        <span class="rich"><i></i>资源</span>
-        <span class="anomaly"><i></i>异常</span>
+      <div class="map-legend-v4" aria-hidden="true">
+        <span><i></i>可游玩星区</span>
+        <span class="dlc"><i></i>DLC</span>
+        <span class="rich"><i></i>资源富集</span>
+        <span class="gate"><i></i>星门连接</span>
       </div>
     </div>
   </section>

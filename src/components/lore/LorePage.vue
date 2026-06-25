@@ -47,7 +47,10 @@ function selectResult(result) {
 
 watch(route, (nextRoute) => {
   const chapter = getLoreChapter(nextRoute.id)
-  if (chapter) selectChapter(chapter, false)
+  if (chapter) {
+    selectChapter(chapter, false)
+    if (nextRoute.anchor) nextTick(() => jumpToAnchor(nextRoute.anchor))
+  }
 }, { immediate: true })
 
 watch(filteredChapters, (chapters) => {
@@ -69,7 +72,7 @@ onMounted(() => {
         <p>{{ loreStats.chapters }} 章 · {{ loreStats.sections }} 节 · {{ loreStats.cards }} 卡 — 按章节阅读 X 宇宙背景资料</p>
       </div>
       <nav class="lore-page-links" aria-label="页面入口">
-        <a class="btn ghost" href="./">数据库</a>
+        <a class="btn ghost" href="#/">数据库</a>
         <a class="btn ghost" href="#/map">星区地图</a>
       </nav>
     </header>

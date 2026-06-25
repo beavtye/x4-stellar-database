@@ -16,6 +16,8 @@ export function formatValue(value, field = '') {
   if (isMissing(value)) return '—'
   if (isZeroLike(value) && isZeroNoiseField(field)) return '—'
   if (/许可证/.test(field)) return formatCodeList(value, LICENSE_LABELS)
+  if (/武器系统|炮塔类型说明|武器类型说明|装备类型/.test(field)) return formatCodeList(value, SYSTEM_LABELS)
+  if (/生产方式/.test(field)) return formatProduction(value)
   if (/完整 ware 标签|ware 标签|标签/.test(field)) return formatCodeList(value, TAG_LABELS)
   if (/建造材料|生产资源/.test(field)) return formatMaterials(value)
   if (!/macro|ware ID|component|来源文件|原文/i.test(field) && looksLikeRawCode(value)) return readableIdentifier(value)
@@ -80,6 +82,22 @@ export function formatCodeList(value, dictionary = {}) {
     .join('、')
 }
 
+export function formatProduction(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return '—'
+  return text
+    .split(/；|;\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const match = part.match(/^([a-z0-9_-]+)\s*:\s*(\d+(?:\.\d+)?)s\s*x\s*(\d+(?:\.\d+)?)$/i)
+      if (!match) return formatCodeList(part, PRODUCTION_LABELS)
+      const mode = PRODUCTION_LABELS[match[1].toLowerCase()] || readableIdentifier(match[1])
+      return `${mode}：${match[2]} 秒 ×${match[3]}`
+    })
+    .join('；')
+}
+
 function formatIdentifierPart(part) {
   const upper = part.toUpperCase()
   if (/^(ARG|ANT|BOR|HAT|HOP|KHA|PAR|PIO|SCA|SPL|TEL|TER|XEN|YAK|XL|L|M|S|XS)$/.test(upper)) return upper
@@ -106,6 +124,30 @@ const LICENSE_LABELS = {
   militaryequipment: '军用装备许可证',
   capitalequipment: '主力舰装备许可证',
   stationmodule: '空间站模块许可证'
+}
+
+const SYSTEM_LABELS = {
+  weapon_standard: '标准武器系统',
+  weapon_heavy: '重型武器系统',
+  weapon_mining: '采矿武器系统',
+  weapon_missile: '导弹武器系统',
+  weapon_torpedo: '鱼雷武器系统',
+  turret_standard: '标准炮塔',
+  turret_missile: '导弹炮塔',
+  turret_longrange: '远程炮塔',
+  turret_mining: '采矿炮塔',
+  shield: '护盾',
+  engine: '引擎',
+  weapon: '武器',
+  turret: '炮塔'
+}
+
+const PRODUCTION_LABELS = {
+  default: '常规生产',
+  terran: 'TER 生产',
+  xenon: 'XEN 生产',
+  closedloop: '闭环生产',
+  recycler: '回收生产'
 }
 
 const TAG_LABELS = {

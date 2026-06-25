@@ -48,6 +48,7 @@ const avg = computed(() => averageMetrics(selectedRows.value.length ? selectedRo
 const material = computed(() => materialRecommendation(selectedRows.value, activeTemplate.value, draft.productionMode))
 const xmlSnippet = computed(() => exportXmlSnippet(typeKey.value, draft, customMetrics.value))
 const chartGeometry = computed(() => buildChartGeometry(chartRows.value, selectedRows.value, customMetrics.value, chart.value))
+const curveGeometry = computed(() => buildCurveGeometry(metrics.value, chartRows.value, selectedRows.value, activeTemplate.value, customMetrics.value))
 
 watch(typeKey, () => resetForType(), { immediate: true })
 watch(rows, () => resetForType())
@@ -164,6 +165,56 @@ function buildChartGeometry(baseRows, selected, custom, config) {
   }
 }
 
+function buildCurveGeometry(metricList, baseRows, selected, template, custom) {
+  const fields = metricList.filter(([key]) => key !== 'price').slice(0, 8)
+  const references = (selected.length ? selected : template ? [template] : baseRows.slice(0, 4)).slice(0, 5)
+  const width = 920
+  const height = 300
+  const pad = { left: 58, right: 28, top: 28, bottom: 58 }
+  const innerW = width - pad.left - pad.right
+  const innerH = height - pad.top - pad.bottom
+  const x = (index) => fields.length <= 1 ? pad.left + innerW / 2 : pad.left + innerW * index / (fields.length - 1)
+  const y = (value) => pad.top + innerH - Math.max(0, Math.min(220, value)) / 220 * innerH
+  const average = averageMetrics(baseRows, fields.map(([key]) => key))
+  const referenceBase = template?.metrics || average
+  const lineFromMetrics = (source, id, name, className, color = '') => {
+    const points = fields.map(([key], index) => {
+      const base = positive(referenceBase[key], average[key] || 1)
+      const raw = positive(source[key], 0)
+      const ratio = base ? raw / base * 100 : 0
+      return {
+        key,
+        label: fields[index][1],
+        x: x(index),
+        y: y(ratio),
+        ratio,
+        raw
+      }
+    })
+    return {
+      id,
+      name,
+      className,
+      color,
+      points,
+      pointText: points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ')
+    }
+  }
+  const lines = [
+    lineFromMetrics(average, 'average', '同梯度均值', 'avg'),
+    ...references.map((row, index) => lineFromMetrics(row.metrics, row.id, row.name, 'ref', curveColors[index % curveColors.length])),
+    lineFromMetrics(custom, 'custom', custom.name || draft.name || '你的设计', 'custom')
+  ]
+  return {
+    width,
+    height,
+    fields,
+    lines,
+    guideRows: [50, 100, 150, 200].map((value) => ({ value, y: y(value) })),
+    xLabels: fields.map(([, label], index) => ({ label, x: x(index) }))
+  }
+}
+
 function robustMax(values, fallback) {
   const sorted = values.filter((value) => Number.isFinite(value) && value > 0).sort((a, b) => a - b)
   if (!sorted.length) return fallback
@@ -174,6 +225,13 @@ function robustMax(values, fallback) {
   const p75 = sorted[Math.max(0, Math.floor(sorted.length * 0.75) - 1)]
   return max > p75 * 4 ? p75 : max
 }
+
+function positive(value, fallback = 0) {
+  const n = Number(value)
+  return Number.isFinite(n) && n > 0 ? n : fallback
+}
+
+const curveColors = ['#7c8cff', '#ff7a90', '#42b883', '#d6a63a', '#00a7d8']
 </script>
 
 <template>
@@ -185,18 +243,41 @@ function robustMax(values, fallback) {
         <p>{{ type.hint }}</p>
       </div>
       <nav class="benchmark-links" aria-label="页面入口">
-        <a class="btn ghost" href="./">数据库</a>
+        <a class="btn ghost" href="#/">数据库</a>
         <a class="btn ghost" href="#/map">星区地图</a>
         <a class="btn ghost" href="#/lore">编年史</a>
       </nav>
     </header>
 
+    <section class="benchmark-workflow" aria-label="Benchmark 使用流程">
+      <article>
+        <span>01</span>
+        <b>选择制作对象</b>
+        <small>{{ type.label }} 只会匹配同尺寸/同类别原版对象。</small>
+      </article>
+      <article>
+        <span>02</span>
+        <b>勾选原版标杆</b>
+        <small>可多选同类对象，曲线会分别显示，不只看均值。</small>
+      </article>
+      <article>
+        <span>03</span>
+        <b>填写你的数值</b>
+        <small>负数会被拦截为 0；武器/炮塔会按弹体参数计算 DPS。</small>
+      </article>
+      <article>
+        <span>04</span>
+        <b>读取输出</b>
+        <small>曲线、差值、材料建议和 XML 片段一起核对。</small>
+      </article>
+    </section>
+
     <section class="benchmark-chart-card">
       <div class="benchmark-chart-head">
         <div>
           <span>{{ type.group }} / {{ type.label }}</span>
-          <h2>强度曲线</h2>
-          <p>{{ chart.xLabel }} × {{ chart.yLabel }}。灰点为同梯度原版对象，<mark class="chart-legend-selected">高亮</mark>为已勾选标杆，<mark class="chart-legend-custom">金色</mark>为你的设计。</p>
+          <h2>曲线对比表</h2>
+          <p>纵轴为相对当前模板百分比；100% 表示等同模板。灰线是同梯度均值，彩线是已勾选原版对象，金线是你的设计。</p>
         </div>
         <div class="benchmark-kpis">
           <div class="kpi-custom">
@@ -214,27 +295,71 @@ function robustMax(values, fallback) {
         </div>
       </div>
 
-      <svg class="benchmark-chart" :viewBox="`0 0 ${chartGeometry.width} ${chartGeometry.height}`" role="img" aria-label="Benchmark 曲线对比图">
-        <line :x1="76" :x2="832" :y1="286" :y2="286" class="chart-axis" />
-        <line :x1="76" :x2="76" :y1="22" :y2="286" class="chart-axis" />
+      <svg class="benchmark-chart benchmark-curve-chart" :viewBox="`0 0 ${curveGeometry.width} ${curveGeometry.height}`" role="img" aria-label="Benchmark 曲线对比表">
         <g class="chart-grid">
-          <line v-for="n in 5" :key="`x-${n}`" :x1="76 + n * 126" :x2="76 + n * 126" y1="22" y2="286" />
-          <line v-for="n in 4" :key="`y-${n}`" x1="76" x2="832" :y1="286 - n * 53" :y2="286 - n * 53" />
+          <line
+            v-for="row in curveGeometry.guideRows"
+            :key="`guide-${row.value}`"
+            x1="58"
+            x2="892"
+            :y1="row.y"
+            :y2="row.y"
+            :class="{ baseline: row.value === 100 }"
+          />
+          <line
+            v-for="label in curveGeometry.xLabels"
+            :key="`x-${label.label}`"
+            :x1="label.x"
+            :x2="label.x"
+            y1="28"
+            y2="242"
+          />
         </g>
-        <polyline v-if="chartGeometry.envelope" :points="chartGeometry.envelope" class="chart-envelope" />
-        <circle
-          v-for="point in chartGeometry.points"
-          :key="point.id"
-          :cx="point.cx"
-          :cy="point.cy"
-          :r="point.custom ? 7 : point.selected ? 5 : 3"
-          :class="{ selected: point.selected, custom: point.custom }"
-        >
-          <title>{{ point.name }}：{{ fieldValue(point.y, chart.yLabel) }}</title>
-        </circle>
-        <text x="454" y="326" class="chart-label">{{ chart.xLabel }}，最大 {{ fieldValue(chartGeometry.xMax, chart.xLabel) }}</text>
-        <text x="18" y="24" class="chart-label vertical">{{ chart.yLabel }}，最大 {{ fieldValue(chartGeometry.yMax, chart.yLabel) }}</text>
+        <text
+          v-for="row in curveGeometry.guideRows"
+          :key="`guide-label-${row.value}`"
+          x="16"
+          :y="row.y + 4"
+          class="chart-label chart-percent-label"
+        >{{ row.value }}%</text>
+        <polyline
+          v-for="line in curveGeometry.lines"
+          :key="line.id"
+          :points="line.pointText"
+          class="benchmark-curve-line"
+          :class="`benchmark-curve-line-${line.className}`"
+          :style="line.color ? { stroke: line.color } : null"
+        />
+        <g v-for="line in curveGeometry.lines" :key="`dots-${line.id}`">
+          <circle
+            v-for="point in line.points"
+            :key="`${line.id}-${point.key}`"
+            :cx="point.x"
+            :cy="point.y"
+            :r="line.className === 'custom' ? 4.8 : 3.4"
+            class="benchmark-curve-dot"
+            :class="`benchmark-curve-dot-${line.className}`"
+            :style="line.color ? { fill: line.color, stroke: line.color } : null"
+          >
+            <title>{{ line.name }} · {{ point.label }}：{{ point.ratio.toFixed(1) }}%</title>
+          </circle>
+        </g>
+        <text
+          v-for="label in curveGeometry.xLabels"
+          :key="`label-${label.label}`"
+          :x="label.x"
+          y="270"
+          class="chart-label chart-x-label"
+        >{{ label.label }}</text>
       </svg>
+
+      <div class="benchmark-curve-legend">
+        <span><i class="legend-avg"></i>同梯度均值</span>
+        <span v-for="line in curveGeometry.lines.filter((item) => item.className === 'ref')" :key="`legend-${line.id}`">
+          <i :style="{ background: line.color }"></i>{{ line.name }}
+        </span>
+        <span><i class="legend-custom"></i>你的设计</span>
+      </div>
     </section>
 
     <section class="benchmark-workspace">
